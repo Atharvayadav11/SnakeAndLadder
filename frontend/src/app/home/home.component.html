@@ -1,0 +1,73 @@
+<div class="container">
+  <mat-card class="main-card">
+    <mat-card-header>
+      <mat-card-title>Snake & Ladder</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div *ngIf="!isInRoom && !showJoinForm">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Player Name</mat-label>
+          <input matInput [(ngModel)]="playerName" (keyup.enter)="onNameEntered()" />
+        </mat-form-field>
+
+        <div class="button-group" *ngIf="playerName.trim()">
+          <button mat-raised-button color="primary" (click)="createRoom()">
+            Create Room
+          </button>
+          <button mat-raised-button color="accent" (click)="showJoinRoomForm()">
+            Join Room
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="!isInRoom && showJoinForm">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Room ID</mat-label>
+          <input matInput [(ngModel)]="roomId" (keyup.enter)="joinRoom()" />
+        </mat-form-field>
+
+        <div class="button-group">
+          <button mat-raised-button color="accent" (click)="joinRoom()" [disabled]="!roomId.trim()">
+            Join Room
+          </button>
+          <button mat-button (click)="goBack()">Back</button>
+        </div>
+      </div>
+
+      <div *ngIf="isInRoom">
+        <div class="room-section">
+          <h3>Room: {{currentRoomId}}</h3>
+         
+        </div>
+
+        <div class="players-section">
+          <h4>Players ({{players.length}})</h4>
+          <mat-list>
+            <mat-list-item *ngFor="let player of players">
+              <mat-icon matListItemIcon>person</mat-icon>
+              <div matListItemTitle>{{player}}</div>
+            </mat-list-item>
+          </mat-list>
+        </div>
+
+        <div class="actions" *ngIf="players.length >= 2">
+          <button mat-raised-button color="primary">Start Game</button>
+        </div>
+        
+        <div *ngIf="players.length < 2" class="waiting">
+          <p>Waiting for more players...</p>
+        </div>
+      </div>
+
+      <div *ngIf="message" class="message" [class.error]="message.includes('Error')">
+        {{message}}
+      </div>
+
+      <div *ngIf="isLoading" class="loading">
+        <mat-spinner diameter="30"></mat-spinner>
+        <p>{{loadingMessage}}</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
