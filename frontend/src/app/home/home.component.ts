@@ -7,7 +7,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common'; 
+import { Router } from '@angular/router';
 import { SocketService } from '../services/socket.services';
 
 
@@ -22,7 +24,8 @@ import { SocketService } from '../services/socket.services';
     MatListModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    CommonModule
+    CommonModule,
+    MatSnackBarModule
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
@@ -34,37 +37,52 @@ export class HomeComponent implements OnInit {
   players: string[] = [];
   message: string = '';
   isInRoom: boolean = false;
-  showJoinForm: boolean = false;
+  selectedAction: 'none' | 'create' | 'join' = 'none';
   isLoading: boolean = false;
   loadingMessage: string = '';
+  showOverlay: boolean = false;
+  availableColors: string[] = [];
+  selectedColor: string | null = null;
+  isPickingColor: boolean = false;
+
+
 
   private socketService = inject(SocketService);
+  private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
 
   ngOnInit() {
+
+    this.socketService.currentRoomId$.subscribe(id => this.currentRoomId = id);
+    this.socketService.players$.subscribe(players => this.players = players);
+    this.socketService.isInRoom$.subscribe(v => this.isInRoom = v);
+    this.socketService.availableColors$.subscribe(c => this.availableColors = c);
+    this.socketService.selectedColor$.subscribe(sc => this.selectedColor = sc);
+
     this.socketService.onRoomCreated().subscribe((data: any) => {
       this.isLoading = false;
-      this.currentRoomId = data.roomId;
-      this.players = data.room.players;
-      this.isInRoom = true;
+      this.showOverlay = true;
       this.message = `Room created successfully. ID: ${data.roomId}`;
+      this.snackBar.open(`Room created. ID: ${data.roomId}`, 'Close', { duration: 3000 });
       console.log('Room created:', data);
+      this.isPickingColor = true;
     });
 
   
     this.socketService.onRoomJoined().subscribe((data: any) => {
       this.isLoading = false;
-      this.currentRoomId = data.roomId;
-      this.players = data.room.players;
-      this.isInRoom = true;
-      this.showJoinForm = false;
+      this.selectedAction = 'none';
+      this.showOverlay = true;
       this.message = `Successfully joined room ${data.roomId}`;
+      this.snackBar.open(`Joined room ${data.roomId}`, 'Close', { duration: 3000 });
       console.log('Joined room:', data);
+      this.isPickingColor = true;
     });
 
     this.socketService.onPlayerJoined().subscribe((data: any) => {
-      this.players = data.players;
       if (data.playerName !== this.playerName) {
         this.message = `${data.playerName} joined the room`;
+        this.snackBar.open(`${data.playerName} joined the room`, 'Close', { duration: 3000 });
         setTimeout(() => this.message = '', 3000);
       }
       console.log('Player joined:', data);
@@ -73,7 +91,25 @@ export class HomeComponent implements OnInit {
     this.socketService.onError().subscribe((error: any) => {
       this.isLoading = false;
       this.message = `Error: ${error.message}`;
+      this.snackBar.open(`Error: ${error.message}`, 'Close', { duration: 3500, panelClass: 'snack-error' });
       console.error('Socket error:', error);
+    });
+
+    this.socketService.onAvailableColors().subscribe((payload: any) => {
+      this.availableColors = payload.colors || [];
+    });
+
+    this.socketService.onColorSelected().subscribe((payload: any) => {
+      if (payload.playerId === (window as any)?.socket?.id) {
+        this.selectedColor = payload.color;
+      }
+    });
+
+    this.socketService.onGameStarted().subscribe((data: any) => {
+      this.isLoading = false;
+      this.isInRoom = true;
+      this.showOverlay = true;
+      this.message = `Game started`;
     });
   }
 
@@ -83,15 +119,24 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  showJoinRoomForm() {
-    this.showJoinForm = true;
+  pickCreate() {
+    this.selectedAction = 'create';
     this.message = '';
+    this.showOverlay = true;
+  }
+
+  pickJoin() {
+    this.selectedAction = 'join';
+    this.message = '';
+    this.showOverlay = true;
   }
 
   goBack() {
-    this.showJoinForm = false;
+    this.selectedAction = 'none';
     this.roomId = '';
     this.message = '';
+    this.showOverlay = false;
+    this.isPickingColor = false;
   }
 
   createRoom() {
@@ -99,10 +144,14 @@ export class HomeComponent implements OnInit {
       this.message = 'Please enter your name';
       return;
     }
+    if (!this.roomId.trim()) {
+      this.message = 'Please enter a room ID';
+      return;
+    }
     this.isLoading = true;
     this.loadingMessage = 'Creating your room...';
     this.message = '';
-    this.socketService.createRoom(this.playerName);
+    this.socketService.createRoom(this.playerName, this.roomId.trim());
   }
 
   joinRoom() {
@@ -118,6 +167,49 @@ export class HomeComponent implements OnInit {
     this.loadingMessage = 'Joining room...';
     this.message = '';
     this.socketService.joinRoom(this.roomId, this.playerName);
+  }
+
+  chooseColor(color: string) {
+    if (!this.currentRoomId) return;
+    this.selectedColor = color;
+    this.socketService.selectColor(this.currentRoomId, color);
+    this.isPickingColor = false;
+  }
+
+  closeOverlay() {
+    this.showOverlay = false;
+  }
+
+  onCloseCard() {
+    if (this.isPickingColor) {
+      this.isPickingColor = false;
+      return;
+    }
+    if (this.isInRoom && this.currentRoomId) {
+      this.leaveRoom();
+      return;
+    }
+    this.goBack();
+  }
+
+  onStartGame() {
+    const roomId = this.socketService.getCurrentRoomId();
+    const playerId = this.socketService.getSocketId();
+    if (roomId) {
+      this.socketService.startGame(roomId, playerId);
+      this.socketService.onGameStarted().subscribe((payload: any) => {
+        const id = payload?.roomId || roomId;
+        this.router.navigate(['/game', id]);
+      });
+    }
+  }
+
+  leaveRoom() {
+    this.socketService.leaveRoom();
+    this.isPickingColor = false;
+    this.showOverlay = false;
+    this.selectedAction = 'none';
+    this.message = '';
   }
 
 

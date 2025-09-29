@@ -1,41 +1,72 @@
 <div class="container">
-  <mat-card class="main-card">
+
+  <div *ngIf="!isInRoom && selectedAction === 'none'" class="corner-actions">
+    <button mat-raised-button (click)="pickCreate()">Create Game</button>
+    <button mat-raised-button (click)="pickJoin()">Join Game</button>
+  </div>
+
+  <div class="backdrop" *ngIf="(selectedAction !== 'none') || (isInRoom && isPickingColor) || (isInRoom && !isPickingColor)"></div>
+
+  <mat-card class="main-card" *ngIf="(selectedAction !== 'none') || (isInRoom && !isPickingColor) || (isInRoom && isPickingColor)">
     <mat-card-header>
-      <mat-card-title>Snake & Ladder</mat-card-title>
+      <mat-card-title *ngIf="selectedAction === 'create' && !isPickingColor">Create Game</mat-card-title>
+      <mat-card-title *ngIf="selectedAction === 'join' && !isPickingColor">Join Game</mat-card-title>
+      <mat-card-title *ngIf="isPickingColor">Pick a Color</mat-card-title>
+      <button mat-icon-button class="close-btn" aria-label="Close" (click)="onCloseCard()">
+        <mat-icon>close</mat-icon>
+      </button>
     </mat-card-header>
 
     <mat-card-content>
-      <div *ngIf="!isInRoom && !showJoinForm">
+      
+      <div *ngIf="!isInRoom && selectedAction === 'create'">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Player Name</mat-label>
-          <input matInput [(ngModel)]="playerName" (keyup.enter)="onNameEntered()" />
+          <input matInput [(ngModel)]="playerName" (keyup.enter)="createRoom()" />
         </mat-form-field>
 
-        <div class="button-group" *ngIf="playerName.trim()">
-          <button mat-raised-button color="primary" (click)="createRoom()">
-            Create Room
-          </button>
-          <button mat-raised-button color="accent" (click)="showJoinRoomForm()">
-            Join Room
-          </button>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Custom Room ID</mat-label>
+          <input matInput [(ngModel)]="roomId" (keyup.enter)="createRoom()" />
+          <mat-hint>Letters and numbers only</mat-hint>
+        </mat-form-field>
+
+        <div class="button-group">
+          <button mat-raised-button color="primary" (click)="createRoom()" [disabled]="!playerName.trim() || !roomId.trim()">Create</button>
+          <button mat-button (click)="goBack()">Back</button>
         </div>
       </div>
 
-      <div *ngIf="!isInRoom && showJoinForm">
+      <div *ngIf="!isInRoom && selectedAction === 'join'">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Player Name</mat-label>
+          <input matInput [(ngModel)]="playerName" (keyup.enter)="joinRoom()" />
+        </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Room ID</mat-label>
           <input matInput [(ngModel)]="roomId" (keyup.enter)="joinRoom()" />
         </mat-form-field>
 
         <div class="button-group">
-          <button mat-raised-button color="accent" (click)="joinRoom()" [disabled]="!roomId.trim()">
+          <button mat-raised-button color="accent" (click)="joinRoom()" [disabled]="!roomId.trim() || !playerName.trim()">
             Join Room
           </button>
           <button mat-button (click)="goBack()">Back</button>
         </div>
       </div>
 
-      <div *ngIf="isInRoom">
+    
+      <div *ngIf="isPickingColor && availableColors.length" class="color-select">
+        <h4>Pick your color</h4>
+        <div class="color-options">
+          <button mat-raised-button *ngFor="let c of availableColors" (click)="chooseColor(c)" [ngClass]="'color-' + c">
+            <img [src]="'/' + c + '.png'" alt="{{c}}" class="color-icon" />
+            {{ c | titlecase }}
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="isInRoom && !isPickingColor">
         <div class="room-section">
           <h3>Room: {{currentRoomId}}</h3>
          
@@ -52,7 +83,7 @@
         </div>
 
         <div class="actions" *ngIf="players.length >= 2">
-          <button mat-raised-button color="primary">Start Game</button>
+          <button mat-raised-button color="primary" (click)="onStartGame()">Start Game</button>
         </div>
         
         <div *ngIf="players.length < 2" class="waiting">
