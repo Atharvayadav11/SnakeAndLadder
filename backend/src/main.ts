@@ -18,7 +18,6 @@ async function bootstrap() {
   const roomsService = app.get(RoomsService);
   const gameService = app.get(GameService);
   
-  
   const { httpServer } = await setupSocket(app.getHttpAdapter().getInstance(), roomsService, gameService);
   
   await app.init();

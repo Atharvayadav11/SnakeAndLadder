@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";    
-import { Room } from "./rooms.model";
+import { Room } from './rooms.model';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
