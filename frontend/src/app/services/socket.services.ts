@@ -19,5 +19,32 @@ export class SocketService {
         this.socket.on(event, (data : T) => observer.next(data));
     })
   }
+
+  createRoom(playerName: string) {
+    this.socket.emit('createRoom', { playerName });
+  }
+
+  joinRoom(roomId: string, playerName: string) {
+    this.socket.emit('joinRoom', { roomId, playerName });
+  }
+
   
+  onRoomCreated(): Observable<any> {
+    return this.on('roomCreated');
+  }
+
+  onRoomJoined(): Observable<any> {
+    return this.on('joinedRoom');
+  }
+
+
+  onPlayerJoined(): Observable<any> {
+    return this.on('playerJoined');
+  }
+
+ 
+  onError(): Observable<any> {
+    return this.on('error');
+  }
+
 }

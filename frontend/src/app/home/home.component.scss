@@ -1,0 +1,90 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background-color: #f5f5f5;
+}
+
+.main-card {
+  max-width: 400px;
+  width: 100%;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  
+  button {
+    flex: 1;
+  }
+}
+
+.room-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  
+  h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    word-break: break-all;
+  }
+}
+
+.players-section {
+  margin-bottom: 24px;
+  
+  h4 {
+    margin: 0 0 12px 0;
+    font-size: 1.1rem;
+  }
+}
+
+.actions {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.waiting {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  
+  p {
+    margin: 0;
+  }
+}
+
+.message {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #e8f5e8;
+  color: #2e7d32;
+  border-radius: 4px;
+  border: 1px solid #c8e6c9;
+  
+  &.error {
+    background-color: #ffebee;
+    color: #c62828;
+    border-color: #ffcdd2;
+  }
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  
+  p {
+    margin-top: 12px;
+    color: #666;
+  }
+}
