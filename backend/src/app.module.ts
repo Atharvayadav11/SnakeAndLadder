@@ -6,7 +6,6 @@ import { GameModule } from './game/game.module';
 
 @Module({
   imports: [RoomsModule, GameModule],
-  imports: [RoomsModule  , GameModule],
 
   controllers: [AppController],
   providers: [AppService],
