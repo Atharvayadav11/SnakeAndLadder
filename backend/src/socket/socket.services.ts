@@ -1,7 +1,6 @@
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { RoomsService } from '../rooms/rooms.service';
-import { Inject } from "@nestjs/common";
 import { GameService } from "src/game/game.service";
 import { GameModel } from "src/game/game.model";
 
@@ -26,7 +25,13 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
     usersInQueue:string[];
   }
 
-  const GameState=new Map<string, GameState>();
+  const ladderVals : [number, number][] = [[5,58], [42,60], [14,49], [53,72], [64,83], [75,94]];
+  const snakeVals: [number, number][]  = [[38,20], [45,7], [51,10], [65,54], [97,61], [91,73]];
+
+  const GameState= new Map<string, GameState>();
+  const ladder = new Map<number, number>(ladderVals);
+  const snakes = new Map<number, number>(snakeVals);
+
 
   const colors=['red','blue','green','yellow'];
   const httpServer = createServer(app);
@@ -164,8 +169,31 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
     });
 
     socket.on('rollDice',(data: GameModel) => {
-      gameService.rollDice(data.playerId)
-    })
+      const {playerId, roomId} = data;
+
+      let val =  Math.floor(Math.random()*6) + 1;
+      io.to(roomId).emit("diceRolled", {val,playerId});
+
+      // Move Player
+      const room = GameState.get(roomId);
+      const player = room!.Users.get(playerId);
+      
+      // Start of Game
+      if(player?.currentPosition === 0 && val != 6)
+        return;
+    
+      let nextPos = player!.currentPosition + val;
+      if(ladder.has(nextPos)){
+        nextPos = ladder.get(nextPos)!;
+      }
+      else if(snakes.has(nextPos)){
+        nextPos = snakes.get(nextPos)!;
+      }
+
+      player!.currentPosition = nextPos;
+      room!.Users.set(playerId,player!);
+      GameState.set(roomId, room!);
+    });
 
       socket.on('startGame',(roomId: string, playerId: string) => {
       const gameState=GameState.get(roomId);
@@ -195,8 +223,6 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
       }
 console.log('GameState:', GameState);
     });
-
-
   });
 
   return { httpServer, io };

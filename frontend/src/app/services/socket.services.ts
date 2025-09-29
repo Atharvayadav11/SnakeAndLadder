@@ -1,15 +1,19 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
+import { UserModel } from '../user.model';
 
 
 @Injectable({ providedIn: 'root' })
 export class SocketService {
   private socket: Socket;
-
+  private users = new Map<string, UserModel>();
 
   constructor() {
     this.socket = io('http://localhost:3000');
+    this.socket.on('diceRolled', (data) => {
+      console.log(data);
+    })
   }
 
   emit(event: string, data?: any){
@@ -35,7 +39,6 @@ export class SocketService {
     this.socket.emit('startGame', { roomId, playerId });  
   }
 
-  
   onRoomCreated(): Observable<any> {
     return this.on('roomCreated');
   }
@@ -67,13 +70,14 @@ export class SocketService {
     this.emit('userDisconnected', { roomId });
   }
 
- 
   onError(): Observable<any> {
     return this.on('error');
   }
 
-  // rollDice(){
-  //   this.emit('rollDice',{playerId: this.gameService.getPlayerId()})
-  // }
+  rollDice(){
+    console.log("Hello");
+    
+  }
+
 
 }

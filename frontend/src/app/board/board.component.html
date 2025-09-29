@@ -1,7 +1,12 @@
-<div>
-  <canvas id="canvas" width="600" height="600"></canvas>
-</div>
-<div>
-  <label for="inp"> Input:</label>
-  <input id="inp" type="number">
+<div class="board-container">
+  <!-- IMPORTANT: Add #canvas -->
+  <canvas #canvas width="600" height="600"></canvas>
+
+  <input
+    type="number"
+    min="1"
+    max="100"
+    (change)="onInputChange($event)"
+    placeholder="Enter steps"
+  />
 </div>

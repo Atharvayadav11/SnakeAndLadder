@@ -2,11 +2,13 @@ import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { BoardComponent } from './board/board.components';
 import { HomeComponent } from './home/home.component';
+
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { DiceComponent } from "./dice/dice.component";
 
 @Component({
   selector: 'app-root',
-  imports: [HomeComponent, MatToolbarModule],
+  imports: [RouterOutlet, BoardComponent, HomeComponent, DiceComponent,MatToolbarModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
