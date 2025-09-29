@@ -68,7 +68,10 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
         maxUsers: 4
       });
 
-      socket.emit('roomCreated', { roomId: room.id, room: room });
+      const obj = Object.fromEntries(GameState.get(room.id)?.Users ?? []);
+      console.log("Om", obj);
+
+      socket.emit('roomCreated', { roomId: room.id, room: room, gameState: obj, isAdmin: true, isGameStarted: false });
       // send available colors to creator
       socket.emit('availableColors', { roomId: room.id, colors });
       console.log('Room created:', room.id);
@@ -84,12 +87,15 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
       const { roomId, playerName } = data;
       console.log('Player', playerName, 'trying to join room:', roomId);
       if(!GameState.has(roomId)){
+        socket.emit('gameState', { gameState: GameState.get(roomId) });
         socket.emit('error', { message: 'Room does not exist' });
         console.log('Room not found:', roomId);
+       
         return;       
       }
 
       if(GameState.get(roomId)?.maxUsers === GameState.get(roomId)?.usersInQueue.length){
+       
         socket.emit('error', { message: 'Room is full' });
         console.log('Room is full:', roomId);
         return;
@@ -100,8 +106,12 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
         console.log('Room not found:', roomId);
         return;
       }
+
+
+      const obj = Object.fromEntries(GameState.get(room.id)?.Users ?? []);
+      console.log("Om", obj);
       socket.join(roomId);
-      socket.emit('joinedRoom', { roomId: roomId, room: room });
+      socket.emit('joinedRoom', { roomId: roomId, room: room, gameState: obj, isAdmin: false, isGameStarted: GameState.get(roomId)?.isGameStarted || false });
 
       const User:User={
         name: playerName,
@@ -131,7 +141,7 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
       socket.emit('availableColors', { roomId, colors: available });
       io.to(roomId).emit('playerJoined', { playerName: playerName, players: room.players });
       console.log('Player joined room:', roomId, 'Players:', room.players);
-
+     
       console.log('GameState:', GameState);
       console.log(GameState.get(roomId)?.Users)
     });
@@ -195,17 +205,17 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
       GameState.set(roomId, room!);
     });
 
-      socket.on('startGame',(roomId: string, playerId: string) => {
-      const gameState=GameState.get(roomId);
-      if(gameState&&gameState.Users.get(playerId)?.isActive&&gameState.Users.get(playerId)?.isAnAdmin){
-        gameState.isGameStarted=true;
+    socket.on('startGame', (payload: { roomId: string, playerId: string }) => {
+      const { roomId, playerId } = payload;
+      const gameState = GameState.get(roomId);
+      if (gameState && gameState.Users.get(playerId)?.isActive && gameState.Users.get(playerId)?.isAnAdmin) {
+        gameState.isGameStarted = true;
         GameState.set(roomId, gameState);
-        socket.emit('gameStarted', { gameState });
-        io.to(roomId).emit('gameStarted', { gameState });
+        const players = roomsService.getPlayers(roomId);
+        io.to(roomId).emit('gameStarted', { roomId, players });
       } else {
         socket.emit('error', { message: 'You are not an admin or you are not active player' });
       }
-      
     })
 
     socket.on('userDisconnected', (data) => {

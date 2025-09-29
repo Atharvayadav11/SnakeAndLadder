@@ -44,6 +44,7 @@ export class HomeComponent implements OnInit {
   availableColors: string[] = [];
   selectedColor: string | null = null;
   isPickingColor: boolean = false;
+  isAdmin: boolean = false;
 
 
 
@@ -58,6 +59,14 @@ export class HomeComponent implements OnInit {
     this.socketService.availableColors$.subscribe(c => this.availableColors = c);
     this.socketService.selectedColor$.subscribe(sc => this.selectedColor = sc);
 
+    // Navigate everyone when the server announces game start
+    this.socketService.onGameStarted().subscribe((payload: any) => {
+      const id = payload?.roomId || this.currentRoomId;
+      if (id) {
+        this.router.navigate(['/game', id]);
+      }
+    });
+
     this.socketService.onRoomCreated().subscribe((data: any) => {
       this.isLoading = false;
       this.showOverlay = true;
@@ -65,6 +74,7 @@ export class HomeComponent implements OnInit {
       this.snackBar.open(`Room created. ID: ${data.roomId}`, 'Close', { duration: 3000 });
       console.log('Room created:', data);
       this.isPickingColor = true;
+      this.isAdmin = !!data.isAdmin;
     });
 
   
@@ -76,6 +86,7 @@ export class HomeComponent implements OnInit {
       this.snackBar.open(`Joined room ${data.roomId}`, 'Close', { duration: 3000 });
       console.log('Joined room:', data);
       this.isPickingColor = true;
+      this.isAdmin = !!data.isAdmin;
     });
 
     this.socketService.onPlayerJoined().subscribe((data: any) => {
@@ -196,10 +207,6 @@ export class HomeComponent implements OnInit {
     const playerId = this.socketService.getSocketId();
     if (roomId) {
       this.socketService.startGame(roomId, playerId);
-      this.socketService.onGameStarted().subscribe((payload: any) => {
-        const id = payload?.roomId || roomId;
-        this.router.navigate(['/game', id]);
-      });
     }
   }
 
