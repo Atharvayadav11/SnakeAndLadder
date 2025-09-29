@@ -1,6 +1,15 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-    currentUser !: string;
+    localUser = signal("");
+    roomId = signal("");
+
+    setLocalUser(userId: string){
+        this.localUser.set(userId);
+    }
+
+    setRoomId(roomId: string){
+        this.roomId.set(roomId);
+    }
 }

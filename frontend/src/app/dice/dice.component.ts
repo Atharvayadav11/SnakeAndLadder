@@ -9,23 +9,22 @@ import { SocketService } from '../services/socket.services';
 export class DiceComponent {
   private socketService = inject(SocketService);
 
-  diceValue = this.socketService.diceValue; // signal from service
-  rolling = signal(false);                  // local animation state
+  diceValue = this.socketService.diceValue;
+  rolling = signal(false);                
 
   constructor() {
-    // React when diceValue changes
     effect(() => {
       const val = this.diceValue();
       if (val > 0) {
-        this.rolling.set(true); // start animation
+        this.rolling.set(true);
         setTimeout(() => {
-          this.rolling.set(false); // stop animation after duration
-        }, 700); // must match your CSS transition/animation time
+          this.rolling.set(false);
+        }, 700);
       }
     });
   }
 
   rollDice() {
-    this.socketService.rollDice(); // just trigger server roll
+    this.socketService.rollDice(); 
   }
 }

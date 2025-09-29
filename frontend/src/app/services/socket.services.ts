@@ -1,28 +1,17 @@
-
 import { inject, Injectable, signal } from '@angular/core';
-
-
 import { BehaviorSubject, Observable } from 'rxjs';
-
 import { io, Socket } from 'socket.io-client';
 import { UserModel } from '../user.model';
 import { UserService } from './users.service';
-
+import { GameState } from '../game.model';
 
 @Injectable({ providedIn: 'root' })
 export class SocketService {
-
-
   private socket: Socket;
   private userService = inject(UserService);
-  private users = new Map<string, UserModel>();
-
-  private roomId!: string;
-  private currentUser !: string;
+  private users !: GameState;
   private moveCallbacks: ((playerId: string, val: number) => void)[] = [];
   diceValue = signal(4);
-
-  
 
   private currentRoomIdSubject = new BehaviorSubject<string>('');
   currentRoomId$ = this.currentRoomIdSubject.asObservable();
@@ -39,42 +28,34 @@ export class SocketService {
   private selectedColorSubject = new BehaviorSubject<string | null>(null);
   selectedColor$ = this.selectedColorSubject.asObservable();
 
-
   constructor() {
     this.socket = io('http://localhost:3000');
+
     this.socket.on('diceRolled', (data) => {
+      const usersMap = new Map<string, UserModel>(Object.entries(data.GameData.Users));
+      const { val, playerId } = data;
 
-      const { val, playerId, nextPlayerId } = data;
+      // Assign to gameState variable
+      this.users = {
+        ...data,
+        Users: usersMap,
+      };
 
-      // Update user’s position
-      let currUser = this.users.get(playerId);
-      if (currUser) {
-        currUser.currentPosition = Math.min(currUser.currentPosition + val, 100);
-        this.users.set(playerId, currUser);
-      }
-
-      // Notify board
-      this.moveCallbacks.forEach(cb => cb(playerId, val));
+      this.moveCallbacks.forEach(cb => cb(playerId, val));  
     });
 
-
-      console.log(data);
-    })
-
-   
     this.socket.on('roomCreated', (data: any) => {
       this.currentRoomIdSubject.next(data.roomId);
       this.playersSubject.next(data.room.players);
       this.isInRoomSubject.next(true);
-    
+
       console.log("Om", JSON.stringify(data.gameState, null, 2));
       console.log(data);
 
-      Object.entries(data.gameState).forEach(([id, user]) => {
-        this.users.set(id, user as UserModel);
-      });
-      console.log("Om2", this.users);
-
+      const newUserId = Object.keys(data.gameState)[0];
+      console.log("ROom ID" + data.roomId);
+      this.userService.setLocalUser(newUserId);
+      this.userService.setRoomId(data.roomId);
 
     });
 
@@ -82,8 +63,11 @@ export class SocketService {
       this.currentRoomIdSubject.next(data.roomId);
       this.playersSubject.next(data.room.players);
       this.isInRoomSubject.next(true);
-      console.log(data.gameState);
-   
+      const newUserId = Object.keys(data.gameState)[0];
+      this.userService.setLocalUser(newUserId);
+      console.log("ROom ID" + data.roomId);
+
+      this.userService.setRoomId(data.roomId);
     });
 
     this.socket.on('playerJoined', (data: any) => {
@@ -101,24 +85,26 @@ export class SocketService {
     });
   }
 
-  emit(event: string, data?: any){
+  emit(event: string, data?: any) {
     this.socket.emit(event, data);
   }
 
-  on<T>(event: string): Observable<T>{
+  on<T>(event: string): Observable<T> {
     return new Observable(observer => {
-        this.socket.on(event, (data : T) => observer.next(data));
+      this.socket.on(event, (data: T) => observer.next(data));
     })
   }
 
   createRoom(playerName: string, roomId?: string) {
     this.socket.emit('createRoom', { playerName, roomId });
   }
+
   joinRoom(roomId: string, playerName: string) {
     this.socket.emit('joinRoom', { roomId, playerName });
   }
+
   startGame(roomId: string, playerId: string) {
-    this.socket.emit('startGame', { roomId, playerId });  
+    this.socket.emit('startGame', { roomId, playerId });
   }
 
   onGameStarted(): Observable<any> {
@@ -149,8 +135,6 @@ export class SocketService {
     this.emit('selectColor', { roomId, color });
   }
 
- 
-
   onPlayerDisconnect(roomId: string) {
     this.emit('userDisconnected', { roomId });
   }
@@ -159,12 +143,9 @@ export class SocketService {
     return this.on('error');
   }
 
- 
   getCurrentRoomId(): string { return this.currentRoomIdSubject.getValue(); }
   getPlayers(): string[] { return this.playersSubject.getValue(); }
   getIsInRoom(): boolean { return this.isInRoomSubject.getValue(); }
-
-  
 
   leaveRoom() {
     const roomId = this.getCurrentRoomId();
@@ -182,24 +163,26 @@ export class SocketService {
     return this.socket.id ?? '';
   }
 
-  rollDice(){
-    this.socket.emit("rollDice", {playerId: this.currentUser, roomId: this.roomId });
+  rollDice() {
+    console.log(this.userService.localUser());
+    console.log(this.userService.roomId());
+
+    this.socket.emit("rollDice", { playerId: this.userService.localUser(), roomId: this.userService.roomId() });
   }
 
-
   getUsers() {
-    return this.users.entries();
+    return this.users.Users.entries();
   }
 
   getUser(playerId: string) {
-    return this.users.get(playerId);
+    return this.users.Users.get(playerId);
   }
 
   updateUserPosition(playerId: string, newPos: number) {
-    let user = this.users.get(playerId);
+    let user = this.users.Users.get(playerId);
     if (user) {
       user.currentPosition = newPos;
-      this.users.set(playerId, user);
+      this.users.Users.set(playerId, user);
     }
   }
 

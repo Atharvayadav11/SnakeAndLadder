@@ -26,9 +26,10 @@ export class BoardComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.boardImage.src = 'image.png';
 
-    // Subscribe to dice rolls
     this.socketService.onMove((playerId: string, val: number) => {
       const user = this.socketService.getUser(playerId);
+      console.log("User" + user);
+      
       if (user) {
         this.hopToCell(playerId, Math.min(user.currentPosition + val, 100));
       }

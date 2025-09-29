@@ -6,7 +6,6 @@ import { GameModel } from "src/game/game.model";
 
 
 export async function setupSocket(app: any, roomsService: RoomsService, gameService: GameService) {
-  
   interface User{
     name:string,
     color:string
@@ -42,6 +41,13 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
       credentials: true
     }
   });
+
+  function serializeGameState(gameState: GameState) {
+  return {
+    ...gameState,
+    Users: Object.fromEntries(gameState.Users), // Map → plain object
+  };
+}
 
   io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
@@ -182,9 +188,15 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
       const {playerId, roomId} = data;
 
       let val =  Math.floor(Math.random()*6) + 1;
-      io.to(roomId).emit("diceRolled", {val,playerId});
+      console.log(GameState);
+      console.log(GameState.get(roomId));
+      
+      io.to(roomId).emit("diceRolled", {playerId,val, GameData: serializeGameState(GameState.get(roomId)!)});
 
       // Move Player
+      console.log("GameState" + GameState);
+      console.log("RoomId" + roomId);
+      
       const room = GameState.get(roomId);
       const player = room!.Users.get(playerId);
       
