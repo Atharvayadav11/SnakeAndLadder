@@ -44,16 +44,20 @@ export class HomeComponent implements OnInit {
   selectedColor: string | null = null;
   isPickingColor: boolean = false;
 
+
+
   private socketService = inject(SocketService);
   private snackBar = inject(MatSnackBar);
 
   ngOnInit() {
-    
+    this.socketService.currentRoomId$.subscribe(id => this.currentRoomId = id);
+    this.socketService.players$.subscribe(players => this.players = players);
+    this.socketService.isInRoom$.subscribe(v => this.isInRoom = v);
+    this.socketService.availableColors$.subscribe(c => this.availableColors = c);
+    this.socketService.selectedColor$.subscribe(sc => this.selectedColor = sc);
+
     this.socketService.onRoomCreated().subscribe((data: any) => {
       this.isLoading = false;
-      this.currentRoomId = data.roomId;
-      this.players = data.room.players;
-      this.isInRoom = true;
       this.showOverlay = true;
       this.message = `Room created successfully. ID: ${data.roomId}`;
       this.snackBar.open(`Room created. ID: ${data.roomId}`, 'Close', { duration: 3000 });
@@ -64,9 +68,6 @@ export class HomeComponent implements OnInit {
   
     this.socketService.onRoomJoined().subscribe((data: any) => {
       this.isLoading = false;
-      this.currentRoomId = data.roomId;
-      this.players = data.room.players;
-      this.isInRoom = true;
       this.selectedAction = 'none';
       this.showOverlay = true;
       this.message = `Successfully joined room ${data.roomId}`;
@@ -76,7 +77,6 @@ export class HomeComponent implements OnInit {
     });
 
     this.socketService.onPlayerJoined().subscribe((data: any) => {
-      this.players = data.players;
       if (data.playerName !== this.playerName) {
         this.message = `${data.playerName} joined the room`;
         this.snackBar.open(`${data.playerName} joined the room`, 'Close', { duration: 3000 });
@@ -97,7 +97,6 @@ export class HomeComponent implements OnInit {
     });
 
     this.socketService.onColorSelected().subscribe((payload: any) => {
-      // If my color was confirmed, store it
       if (payload.playerId === (window as any)?.socket?.id) {
         this.selectedColor = payload.color;
       }
@@ -180,7 +179,6 @@ export class HomeComponent implements OnInit {
 
   onCloseCard() {
     if (this.isPickingColor) {
-      // keep user in room, just hide picking card
       this.isPickingColor = false;
       return;
     }
@@ -192,13 +190,7 @@ export class HomeComponent implements OnInit {
   }
 
   leaveRoom() {
-    if (this.currentRoomId) {
-      this.socketService.onPlayerDisconnect(this.currentRoomId);
-    }
-    this.isInRoom = false;
-    this.currentRoomId = '';
-    this.players = [];
-    this.selectedColor = null;
+    this.socketService.leaveRoom();
     this.isPickingColor = false;
     this.showOverlay = false;
     this.selectedAction = 'none';
