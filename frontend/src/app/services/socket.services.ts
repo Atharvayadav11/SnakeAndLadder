@@ -1,12 +1,12 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
-import { GameService } from './game-state.services';
+
 
 @Injectable({ providedIn: 'root' })
 export class SocketService {
   private socket: Socket;
-  private gameService = inject(GameService);
+
 
   constructor() {
     this.socket = io('http://localhost:3000');
@@ -44,13 +44,17 @@ export class SocketService {
     return this.on('playerJoined');
   }
 
+  onPlayerDisconnect(roomId: string) {
+    this.emit('userDisconnected', { roomId });
+  }
+
  
   onError(): Observable<any> {
     return this.on('error');
   }
 
-  rollDice(){
-    this.emit('rollDice',{playerId: this.gameService.getPlayerId()})
-  }
+  // rollDice(){
+  //   this.emit('rollDice',{playerId: this.gameService.getPlayerId()})
+  // }
 
 }
