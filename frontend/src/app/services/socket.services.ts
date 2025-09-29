@@ -58,9 +58,6 @@ export class SocketService {
     });
 
 
-      console.log(data);
-    })
-
    
     this.socket.on('roomCreated', (data: any) => {
       this.currentRoomIdSubject.next(data.roomId);
