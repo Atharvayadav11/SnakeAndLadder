@@ -9,6 +9,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common'; 
+import { Router } from '@angular/router';
 import { SocketService } from '../services/socket.services';
 
 
@@ -48,6 +49,7 @@ export class HomeComponent implements OnInit {
 
   private socketService = inject(SocketService);
   private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
 
   ngOnInit() {
     this.socketService.currentRoomId$.subscribe(id => this.currentRoomId = id);
@@ -187,6 +189,18 @@ export class HomeComponent implements OnInit {
       return;
     }
     this.goBack();
+  }
+
+  onStartGame() {
+    const roomId = this.socketService.getCurrentRoomId();
+    const playerId = this.socketService.getSocketId();
+    if (roomId) {
+      this.socketService.startGame(roomId, playerId);
+      this.socketService.onGameStarted().subscribe((payload: any) => {
+        const id = payload?.roomId || roomId;
+        this.router.navigate(['/game', id]);
+      });
+    }
   }
 
   leaveRoom() {
