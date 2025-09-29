@@ -1,7 +1,6 @@
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { RoomsService } from '../rooms/rooms.service';
-import { Inject } from "@nestjs/common";
 import { GameService } from "src/game/game.service";
 import { GameModel } from "src/game/game.model";
 
@@ -120,8 +119,9 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
     });
 
     socket.on('rollDice',(data: GameModel) => {
-      gameService.rollDice(data.playerId)
-    })
+      let val = gameService.rollDice(data.playerId);
+      io.to(data.roomId).emit("diceRolled", {val, playerId: data.playerId});
+    });
 
     socket.on('userDisconnected', (data) => {
       const { roomId } = data;
@@ -133,8 +133,6 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
       }
 console.log('GameState:', GameState);
     });
-
-
   });
 
   return { httpServer, io };
