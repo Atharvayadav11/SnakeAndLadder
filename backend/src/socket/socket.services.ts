@@ -1,20 +1,22 @@
-import { createServer } from "http";    
+import { createServer } from "http";
 import { Server } from "socket.io";
 import { RoomsService } from '../rooms/rooms.service';
 import { Inject } from "@nestjs/common";
+import { GameService } from "src/game/game.service";
+import { GameModel } from "src/game/game.model";
 
 
-export async function setupSocket(app: any, roomsService: RoomsService) {
-    const httpServer = createServer(app);
-    const io = new Server(httpServer, {
-        cors: {
-            origin: ["http://localhost:4200"],
-            methods: ["GET", "POST", "PUT", "DELETE"],
-            credentials: true
-        }
-    });
+export async function setupSocket(app: any, roomsService: RoomsService, gameService: GameService) {
+  const httpServer = createServer(app);
+  const io = new Server(httpServer, {
+    cors: {
+      origin: ["http://localhost:4200"],
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      credentials: true
+    }
+  });
 
-      io.on('connection', (socket) => {
+  io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
 
 
@@ -25,9 +27,9 @@ export async function setupSocket(app: any, roomsService: RoomsService) {
       socket.join(room.id);
       socket.emit('roomCreated', { roomId: room.id, room: room });
       console.log('Room created:', room.id);
-    }); 
+    });
 
-      socket.on('joinRoom', (data) => {
+    socket.on('joinRoom', (data) => {
       const { roomId, playerName } = data;
       console.log('Player', playerName, 'trying to join room:', roomId);
       const room = roomsService.joinRoom(roomId, playerName);
@@ -41,8 +43,12 @@ export async function setupSocket(app: any, roomsService: RoomsService) {
       io.to(roomId).emit('playerJoined', { playerName: playerName, players: room.players });
       console.log('Player joined room:', roomId, 'Players:', room.players);
     });
-    
-        socket.on('disconnect', () => {
+
+    socket.on('rollDice',(data: GameModel) => {
+      gameService.rollDice(data.playerId)
+    })
+
+    socket.on('disconnect', () => {
       console.log('Client disconnected:', socket.id);
     });
 
