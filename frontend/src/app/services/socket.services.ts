@@ -6,17 +6,17 @@ import { UserModel } from '../user.model';
 
 @Injectable({ providedIn: 'root' })
 export class SocketService {
+
+
   private socket: Socket;
   private users = new Map<string, UserModel>();
-
+  
 
   private currentRoomIdSubject = new BehaviorSubject<string>('');
   currentRoomId$ = this.currentRoomIdSubject.asObservable();
 
   private playersSubject = new BehaviorSubject<string[]>([]);
   players$ = this.playersSubject.asObservable();
-
-
 
   private isInRoomSubject = new BehaviorSubject<boolean>(false);
   isInRoom$ = this.isInRoomSubject.asObservable();
@@ -38,13 +38,24 @@ export class SocketService {
       this.currentRoomIdSubject.next(data.roomId);
       this.playersSubject.next(data.room.players);
       this.isInRoomSubject.next(true);
+    
+      console.log("Om", JSON.stringify(data.gameState, null, 2));
       console.log(data);
+
+      Object.entries(data.gameState).forEach(([id, user]) => {
+        this.users.set(id, user as UserModel);
+      });
+      console.log("Om2", this.users);
+
+
     });
 
     this.socket.on('joinedRoom', (data: any) => {
       this.currentRoomIdSubject.next(data.roomId);
       this.playersSubject.next(data.room.players);
       this.isInRoomSubject.next(true);
+      console.log(data.gameState);
+   
     });
 
     this.socket.on('playerJoined', (data: any) => {
@@ -60,6 +71,8 @@ export class SocketService {
         this.selectedColorSubject.next(payload.color);
       }
     });
+
+
   }
 
   emit(event: string, data?: any){
@@ -75,14 +88,15 @@ export class SocketService {
   createRoom(playerName: string, roomId?: string) {
     this.socket.emit('createRoom', { playerName, roomId });
   }
-  onGameStarted(): Observable<any> {
-    return this.on('gameStarted');
-  }
   joinRoom(roomId: string, playerName: string) {
     this.socket.emit('joinRoom', { roomId, playerName });
   }
   startGame(roomId: string, playerId: string) {
     this.socket.emit('startGame', { roomId, playerId });  
+  }
+
+  onGameStarted(): Observable<any> {
+    return this.on('gameStarted');
   }
 
   onRoomCreated(): Observable<any> {
@@ -137,6 +151,10 @@ export class SocketService {
     this.isInRoomSubject.next(false);
     this.availableColorsSubject.next([]);
     this.selectedColorSubject.next(null);
+  }
+
+  getSocketId(): string {
+    return this.socket.id ?? '';
   }
 
   rollDice(){
