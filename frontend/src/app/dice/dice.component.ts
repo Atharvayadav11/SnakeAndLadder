@@ -8,9 +8,15 @@ import { SocketService } from '../services/socket.services';
   styleUrl: './dice.component.scss'
 })
 export class DiceComponent {
-  private socketService = inject(SocketService);
+  currentRoll = 1;
+  isEvenRoll = true;
 
-  onDiceRoll(){
-    this.socketService.rollDice();
+  rollDice() {
+    // this.isEvenRoll = !this.isEvenRoll;
+    this.currentRoll = this.getRandomNumber(1, 6);
+  }
+
+  private getRandomNumber(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 }

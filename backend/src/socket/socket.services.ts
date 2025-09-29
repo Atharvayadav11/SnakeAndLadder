@@ -25,7 +25,13 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
     usersInQueue:string[];
   }
 
-  const GameState=new Map<string, GameState>();
+  const ladderVals : [number, number][] = [[5,58], [42,60], [14,49], [53,72], [64,83], [75,94]];
+  const snakeVals: [number, number][]  = [[38,20], [45,7], [51,10], [65,54], [97,61], [91,73]];
+
+  const GameState= new Map<string, GameState>();
+  const ladder = new Map<number, number>(ladderVals);
+  const snakes = new Map<number, number>(snakeVals);
+
 
   const colors=['red','blue','green','yellow'];
   const httpServer = createServer(app);
@@ -119,8 +125,30 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
     });
 
     socket.on('rollDice',(data: GameModel) => {
-      let val = gameService.rollDice(data.playerId);
-      io.to(data.roomId).emit("diceRolled", {val, playerId: data.playerId});
+      const {playerId, roomId} = data;
+
+      let val =  Math.floor(Math.random()*6) + 1;
+      io.to(roomId).emit("diceRolled", {val,playerId});
+
+      // Move Player
+      const room = GameState.get(roomId);
+      const player = room!.Users.get(playerId);
+      
+      // Start of Game
+      if(player?.currentPosition === 0 && val != 6)
+        return;
+    
+      let nextPos = player!.currentPosition + val;
+      if(ladder.has(nextPos)){
+        nextPos = ladder.get(nextPos)!;
+      }
+      else if(snakes.has(nextPos)){
+        nextPos = snakes.get(nextPos)!;
+      }
+
+      player!.currentPosition = nextPos;
+      room!.Users.set(playerId,player!);
+      GameState.set(roomId, room!);
     });
 
     socket.on('userDisconnected', (data) => {
