@@ -1,9 +1,18 @@
 <div class="board-container">
-  <!-- Game Board -->
-  <canvas #canvas width="600" height="600"></canvas>
-
-  <!-- Dice Section -->
-  <div class="dice-comp">
-    <app-dice></app-dice>
+  <div class="board-wrap">
+    <canvas #canvas width="600" height="600"></canvas>
+    <div class="start-pieces">
+      <img src="/red.png" alt="Red" />
+      <img src="/blue.png" alt="Blue" />
+      <img src="/green.png" alt="Green" />
+      <img src="/yellow.png" alt="Yellow" />
+    </div>
+  </div>
+  <div class="right-pane">
+    <div class="spacer"></div>
+    <div class="dice-comp">
+      <app-dice></app-dice>
+    </div>
   </div>
 </div>
+
