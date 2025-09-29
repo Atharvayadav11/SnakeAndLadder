@@ -4,12 +4,97 @@
   align-items: center;
   min-height: 100vh;
   padding: 20px;
-  background-color: #f5f5f5;
+  background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), url('/helio-03.jpg') center center / cover no-repeat fixed;
+  position: relative;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 1;
 }
 
 .main-card {
-  max-width: 400px;
+  max-width: 520px;
+  width: 92%;
+  z-index: 2;
+  align-self: center;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+
+
+.main-card mat-card-header {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.main-card mat-card-title {
   width: 100%;
+  text-align: center;
+  color: #ffffff;
+}
+
+.main-card .close-btn {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  color: #ffffff;
+}
+
+
+
+.main-card,
+.main-card mat-card-content,
+.main-card mat-card-title,
+.main-card .mat-mdc-list-item,
+.main-card .mat-mdc-list-item .mdc-list-item__primary-text {
+  color: #ffffff !important;
+}
+
+.main-card .mat-mdc-form-field {
+  --mdc-theme-text-primary-on-background: #ffffff;
+}
+
+.main-card .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.main-card .mdc-text-field--filled .mdc-line-ripple::after {
+  border-bottom-color: #ffffff;
+}
+
+
+.main-card .mdc-text-field__input,
+.main-card .mdc-floating-label,
+.main-card .mat-mdc-hint,
+.main-card .mdc-text-field__input::placeholder {
+  color: #ffffff !important;
+  opacity: 0.95;
+}
+
+
+.main-card .mat-mdc-raised-button,
+.corner-actions .mat-mdc-raised-button {
+  color: #111111 !important;
+  background-color: #f5f5f8 !important;
+}
+
+.main-card .mat-mdc-button,
+.main-card .mat-mdc-outlined-button,
+.main-card .mat-mdc-stroked-button {
+  color: #111111 !important;
 }
 
 .full-width {
@@ -24,6 +109,34 @@
   
   button {
     flex: 1;
+  }
+}
+
+.corner-actions {
+  position: fixed;
+  left: 50%;
+  bottom: 12vh;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 16px;
+  z-index: 2;
+
+  button {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    border-radius: 999px;
+    padding: 0 28px;
+    height: 56px;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    background-color: #f5f5f8;
+    color: #111111;
+  }
+
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
   }
 }
 
@@ -47,6 +160,37 @@
     margin: 0 0 12px 0;
     font-size: 1.1rem;
   }
+}
+
+.color-select {
+  margin-top: 16px;
+  text-align: center;
+  h4 { margin: 0 0 12px 0; color: #ffffff; }
+}
+
+.color-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.color-options .mat-mdc-raised-button {
+  min-width: 90px;
+  color: #111111 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-red { background-color: #ef5350 !important; color: #ffffff !important; }
+.color-blue { background-color: #42a5f5 !important; color: #ffffff !important; }
+.color-yellow { background-color: #ffeb3b !important; color: #111111 !important; }
+.color-green { background-color: #66bb6a !important; color: #ffffff !important; }
+
+.color-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
 .actions {
