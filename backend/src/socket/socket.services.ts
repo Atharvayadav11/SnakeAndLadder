@@ -1,7 +1,6 @@
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { RoomsService } from '../rooms/rooms.service';
-import { Inject } from "@nestjs/common";
 import { GameService } from "src/game/game.service";
 import { GameModel } from "src/game/game.model";
 
@@ -18,8 +17,6 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
 
   io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
-
-
 
     socket.on('createRoom', (data) => {
       console.log('Creating room for player:', data.playerName);
@@ -45,14 +42,13 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
     });
 
     socket.on('rollDice',(data: GameModel) => {
-      gameService.rollDice(data.playerId)
-    })
+      let val = gameService.rollDice(data.playerId);
+      io.to(data.roomId).emit("diceRolled", {val, playerId: data.playerId});
+    });
 
     socket.on('disconnect', () => {
       console.log('Client disconnected:', socket.id);
     });
-
-
   });
 
   return { httpServer, io };

@@ -48,6 +48,7 @@ export class HomeComponent implements OnInit {
       this.players = data.room.players;
       this.isInRoom = true;
       this.message = `Room created successfully. ID: ${data.roomId}`;
+      this.socketService.roomId = this.currentRoomId;
       console.log('Room created:', data);
     });
 

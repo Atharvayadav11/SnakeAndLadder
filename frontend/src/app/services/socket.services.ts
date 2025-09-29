@@ -7,9 +7,13 @@ import { GameService } from './game-state.services';
 export class SocketService {
   private socket: Socket;
   private gameService = inject(GameService);
+  roomId!: string;
 
   constructor() {
     this.socket = io('http://localhost:3000');
+    this.socket.on('diceRolled', (data) => {
+      console.log(data);
+    })
   }
 
   emit(event: string, data?: any){
@@ -50,7 +54,7 @@ export class SocketService {
   }
 
   rollDice(){
-    this.emit('rollDice',{playerId: this.gameService.getPlayerId()})
+    this.emit('rollDice',{playerId: "123", roomId: this.roomId});
   }
 
 }
