@@ -41,7 +41,6 @@ export class HomeComponent implements OnInit {
   private socketService = inject(SocketService);
 
   ngOnInit() {
-    
     this.socketService.onRoomCreated().subscribe((data: any) => {
       this.isLoading = false;
       this.currentRoomId = data.roomId;

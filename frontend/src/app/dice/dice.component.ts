@@ -1,22 +1,31 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, effect } from '@angular/core';
 import { SocketService } from '../services/socket.services';
 
 @Component({
   selector: 'app-dice',
-  imports: [],
   templateUrl: './dice.component.html',
-  styleUrl: './dice.component.scss'
+  styleUrls: ['./dice.component.scss']
 })
 export class DiceComponent {
-  currentRoll = 1;
-  isEvenRoll = true;
+  private socketService = inject(SocketService);
 
-  rollDice() {
-    // this.isEvenRoll = !this.isEvenRoll;
-    this.currentRoll = this.getRandomNumber(1, 6);
+  diceValue = this.socketService.diceValue; // signal from service
+  rolling = signal(false);                  // local animation state
+
+  constructor() {
+    // React when diceValue changes
+    effect(() => {
+      const val = this.diceValue();
+      if (val > 0) {
+        this.rolling.set(true); // start animation
+        setTimeout(() => {
+          this.rolling.set(false); // stop animation after duration
+        }, 700); // must match your CSS transition/animation time
+      }
+    });
   }
 
-  private getRandomNumber(min: number, max: number): number {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+  rollDice() {
+    this.socketService.rollDice(); // just trigger server roll
   }
 }
