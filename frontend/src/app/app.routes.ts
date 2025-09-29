@@ -9,11 +9,6 @@ export const routes: Routes = [
 
     },
     {
-        path:'game',component:BoardComponent,
-        children:[
-            {
-                path:':roomId',component:BoardComponent
-            }
-        ]
+        path:'game/:roomId',component:BoardComponent
     }
 ];
