@@ -6,8 +6,11 @@ import { v4 as uuidv4 } from 'uuid';
 export class RoomsService {
     private rooms: Record<string, Room> = {};
 
-    createRoom(playerName: string): Room {
-        const roomId = uuidv4();
+    createRoom(playerName: string, customId?: string): Room {
+        const roomId = (customId && customId.trim().length > 0) ? customId.trim() : uuidv4();
+        if (this.rooms[roomId]) {
+            throw new Error('Room ID already exists');
+        }
         const newRoom: Room = { id: roomId, players: [playerName] };
         this.rooms[roomId] = newRoom;
         return newRoom;
