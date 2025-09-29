@@ -188,16 +188,13 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
       const {playerId, roomId} = data;
 
       let val =  Math.floor(Math.random()*6) + 1;
-      console.log(GameState);
-      console.log(GameState.get(roomId));
-      
+  
       io.to(roomId).emit("diceRolled", {playerId,val, GameData: serializeGameState(GameState.get(roomId)!)});
 
       // Move Player
-      console.log("GameState" + GameState);
-      console.log("RoomId" + roomId);
       
       const room = GameState.get(roomId);
+      console.log("dice"+room)
       const player = room!.Users.get(playerId);
       
       // Start of Game

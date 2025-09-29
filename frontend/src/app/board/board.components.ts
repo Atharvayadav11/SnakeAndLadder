@@ -3,10 +3,9 @@ import {
   ElementRef,
   OnInit,
   AfterViewInit,
-  ViewChild, inject
+  ViewChild
 } from '@angular/core';
 import { DiceComponent } from "../dice/dice.component";
-import { SocketService } from '../services/socket.services';
 
 @Component({
   selector: 'app-board',
@@ -19,13 +18,12 @@ export class BoardComponent implements OnInit, AfterViewInit {
 
   private ctx!: CanvasRenderingContext2D;
   private boardImage = new Image();
-  private socketService = inject(SocketService);
 
+  currentCell = 1;
   animating = false;
 
   ngOnInit() {
     this.boardImage.src = 'image.png';
-
     this.socketService.onMove((playerId: string, val: number) => {
       const user = this.socketService.getUser(playerId);
       console.log("User" + user);
@@ -34,6 +32,7 @@ export class BoardComponent implements OnInit, AfterViewInit {
         this.hopToCell(playerId, Math.min(user.currentPosition + val, 100));
       }
     });
+
   }
 
   ngAfterViewInit() {
@@ -41,20 +40,10 @@ export class BoardComponent implements OnInit, AfterViewInit {
     this.ctx = canvas.getContext('2d')!;
 
     this.boardImage.onload = () => {
-      this.redrawBoard();
+      this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+      this.drawGrid();
+      // do not place the piece on cell 1 initially; pieces shown outside via HTML
     };
-  }
-
-  private redrawBoard() {
-    const canvas = this.canvasRef.nativeElement;
-    this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-    this.drawGrid();
-
-    // Draw all users
-    for (const [playerId, user] of this.socketService.getUsers()) {
-      const { x, y } = this.getCoords(user.currentPosition);
-      this.drawBall(x, y, user.color, playerId);
-    }
   }
 
   private drawGrid() {
@@ -75,17 +64,11 @@ export class BoardComponent implements OnInit, AfterViewInit {
     this.ctx.stroke();
   }
 
-  private drawBall(x: number, y: number, color: string, playerId: string) {
+  private drawBall(x: number, y: number) {
     this.ctx.beginPath();
-    this.ctx.fillStyle = color;
+    this.ctx.fillStyle = '#FFA500';
     this.ctx.arc(x, y, 10, 0, Math.PI * 2);
     this.ctx.fill();
-
-    // Optionally add initials
-    this.ctx.fillStyle = "white";
-    this.ctx.font = "10px Arial";
-    this.ctx.textAlign = "center";
-    this.ctx.fillText(playerId[0].toUpperCase(), x, y + 3);
   }
 
   private getCoords(cell: number) {
@@ -104,7 +87,7 @@ export class BoardComponent implements OnInit, AfterViewInit {
     return { x, y };
   }
 
-  private hopOneStep(playerId: string, startCell: number, nextCell: number, callback: () => void) {
+  private hopOneStep(startCell: number, nextCell: number, callback: () => void) {
     const start = this.getCoords(startCell);
     const end = this.getCoords(nextCell);
 
@@ -112,6 +95,11 @@ export class BoardComponent implements OnInit, AfterViewInit {
     const duration = 50;
 
     const animate = () => {
+      const canvas = this.canvasRef.nativeElement;
+
+      this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+      this.drawGrid();
+
       progress++;
       const t = progress / duration;
 
@@ -122,14 +110,12 @@ export class BoardComponent implements OnInit, AfterViewInit {
         (end.y - start.y) * t -
         hopHeight * Math.sin(Math.PI * t);
 
-      this.redrawBoard(); // redraw everyone
-      const user = this.socketService.getUser(playerId);
-      this.drawBall(x, y, user!.color, playerId); // overwrite moving ball
+      this.drawBall(x, y);
 
       if (progress < duration) {
         requestAnimationFrame(animate);
       } else {
-        this.socketService.updateUserPosition(playerId, nextCell);
+        this.currentCell = nextCell;
         callback();
       }
     };
@@ -137,11 +123,11 @@ export class BoardComponent implements OnInit, AfterViewInit {
     animate();
   }
 
-  private hopToCell(playerId: string, targetCell: number) {
+  private hopToCell(targetCell: number) {
     if (this.animating) return;
     this.animating = true;
 
-    let step = this.socketService.getUser(playerId)!.currentPosition;
+    let step = this.currentCell;
 
     const doNextHop = () => {
       if (step === targetCell) {
@@ -150,7 +136,7 @@ export class BoardComponent implements OnInit, AfterViewInit {
       }
 
       const nextStep = step + 1;
-      this.hopOneStep(playerId, step, nextStep, () => {
+      this.hopOneStep(step, nextStep, () => {
         step = nextStep;
         doNextHop();
       });
@@ -158,5 +144,13 @@ export class BoardComponent implements OnInit, AfterViewInit {
 
     doNextHop();
   }
-}
 
+  onInputChange(event: Event) {
+    const val = parseInt((event.target as HTMLInputElement).value);
+    if (val >= 1 && val <= 100) {
+      this.hopToCell(Math.min(this.currentCell + val, 100));
+    } else {
+      alert('Enter a number between 1 and 100');
+    }
+  }
+}
