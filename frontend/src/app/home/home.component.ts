@@ -52,6 +52,7 @@ export class HomeComponent implements OnInit {
   private router = inject(Router);
 
   ngOnInit() {
+
     this.socketService.currentRoomId$.subscribe(id => this.currentRoomId = id);
     this.socketService.players$.subscribe(players => this.players = players);
     this.socketService.isInRoom$.subscribe(v => this.isInRoom = v);

@@ -1,12 +1,9 @@
 <div class="board-container">
-  <!-- IMPORTANT: Add #canvas -->
+  <!-- Game Board -->
   <canvas #canvas width="600" height="600"></canvas>
 
-  <input
-    type="number"
-    min="1"
-    max="100"
-    (change)="onInputChange($event)"
-    placeholder="Enter steps"
-  />
+  <!-- Dice Section -->
+  <div class="dice-comp">
+    <app-dice></app-dice>
+  </div>
 </div>
