@@ -1,4 +1,5 @@
 import { UserModel } from "../models/user";
+import { GameStateModel } from "../models/gameState";
 
 export interface GameModel{
     playerId: string,
@@ -13,24 +14,7 @@ export interface Player {
 }
 
 
-export interface UserModel{
-    name:string,
-    color:string
-    currentPosition:number,
-    isAnAdmin:boolean,
-    isActive:boolean
-}
 
-export interface GameState{
-    users: Map<string, UserModel>;
-    winner: string;
-    currentUserToPlay: string;
-    isGameStarted: boolean;
-    isGameFinished: boolean;
-    maxUsers: number;
-    usersInQueue: string[];
-    availableColors: ["red", "blue", "green", "yellow"];
-}
 
 export interface Snake {
     head: number;

@@ -15,7 +15,7 @@ getRoomById(id: string):any {
         const gameState = this.gameService.getGameState(id);
     }
 
-    createRoom(playerName: string, customId?: string, userId?: string): Room {
+    createRoom(playerName: string, customId?: string, userId?: string): GameStateModel {
         const roomId = (customId && customId.trim().length > 0) ? customId.trim() : uuidv4();
 if(this.gameService.getGameState(roomId)){
     throw new Error('Room with this ID already exists');
@@ -44,7 +44,7 @@ if(this.gameService.getGameState(roomId)){
         return newRoom;
     }
 
-    joinRoom(roomId: string, playerName: string,userId:string): Room | null {
+    joinRoom(roomId: string, playerName: string,userId:string): GameStateModel | null {
         const room = this.gameService.getGameState(roomId);
         if (!room) return null;
         if (room.Users.size >= room.maxUsers) {
