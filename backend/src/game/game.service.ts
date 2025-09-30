@@ -4,8 +4,8 @@ import { GameStateModel } from "../models/gameState";
 @Injectable()
 export class GameService {
    private gameState: Map<string, GameStateModel> = new Map();
-   private LADDERS: { [key: number]: number } = { 5: 58, 14: 49, 42: 60, 53: 72, 64: 83, 75: 94 };
-   private SNAKES: { [key: number]: number } = { 38: 20, 45: 7, 51: 10, 65: 54, 91: 73, 97: 61 };
+   private LADDERS: { [key: number]: number } = {5: 58,14: 49,42: 60,53: 72,64: 83,75: 94};
+   private SNAKES: { [key: number]: number } = {38: 20,45: 7,51: 10,65: 54,91: 73,97: 61};
 
    onStartGame(roomId: string, playerId: string) {
       const gameState = this.gameState.get(roomId);
