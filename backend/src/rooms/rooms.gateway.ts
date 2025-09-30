@@ -1,7 +1,6 @@
 import { WebSocketGateway,WebSocketServer,OnGatewayConnection,OnGatewayInit,OnGatewayDisconnect, SubscribeMessage ,MessageBody} from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import { RoomsService } from "./rooms.service";
-
 import { GameService } from "src/game/game.service";
 
 @WebSocketGateway({
@@ -14,6 +13,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     server: Server;
 
     constructor(private readonly roomsService: RoomsService) {}
+
 
 
     handleConnection(client: Socket) {
@@ -46,6 +46,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         try{
             const { roomId, playerName } = data;
             console.log(`Player ${playerName} joining room: ${roomId}`);
+
             if (!this.roomsService.getRoomById(roomId)) {
                 socket.emit('error', { message: 'Room not found' });
                 return;
@@ -54,11 +55,13 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
             socket.join(roomId);
             socket.emit('roomJoined', room);
 
+
         }catch(err){
             console.error('Error joining room:', err);
             socket.emit('error', { message: 'Failed to join room' });
         }
     }
+
     @SubscribeMessage('selectColor')
     handleSelectColor(@MessageBody() data: {roomId: string, playerId: string, color: string}, socket: Socket): void {
         try{
@@ -66,10 +69,12 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
             console.log(`Player ${playerId} selecting color ${color} in room: ${roomId}`);
             const room = this.roomsService.selectColor(roomId, playerId, color);
             if (!room) {
+
                 socket.emit('error', { message: 'Room not found or color not available' });
                 return;
             }
             this.server.to(roomId).emit('colorSelected', { playerId, color });
+
         }catch(err){
             console.error('Error selecting color:', err);
             socket.emit('error', { message: 'Failed to select color' });
@@ -89,9 +94,12 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
                     return;
                 }
                 this.server.to(roomId).emit('userDisconnected', { playerId });
+
             } catch (err) {
                 console.error('Error disconnecting user:', err);
                 socket.emit('error', { message: 'Failed to disconnect user' });
             }
+
         }   
+
 }
