@@ -63,7 +63,7 @@ joinRoom(roomId: string, playerName: string,userId:string): GameStateModel | nul
         return room;
     }
 
-selectColor(roomId: any, playerId: any, color: any) {
+selectColor(roomId: any, playerId: any, color: any): GameStateModel | null {   
         const room = this.gameService.getGameState(roomId);
         if (!room) {
             throw new Error('Room not found');
@@ -97,5 +97,18 @@ handleUserDisconnect(roomId: string, playerId: string): GameStateModel | null {
     }
 
 
+handleUserDisconnect(roomId: string, playerId: string): GameStateModel | null {
+        const room = this.gameService.getGameState(roomId);
+        if (!room) return null;
+        const user = room.Users.get(playerId);
+        if (user) {
+            user.isActive = false;
+            room.Users.set(playerId, user);
+            room.availableColors.push(user.color);
+            user.color = '';
+        }
+        this.gameService['gameState'].set(roomId, room);
+        return room;
+    }
 
 }
