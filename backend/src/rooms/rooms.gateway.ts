@@ -46,14 +46,15 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         try{
             const { roomId, playerName } = data;
             console.log(`Player ${playerName} joining room: ${roomId}`);
-            if(!this.roomsService.getRoomById(roomId)){
-                socket.emit('error', { message: 'Room does not exist' });
+
+            if (!this.roomsService.getRoomById(roomId)) {
+                socket.emit('error', { message: 'Room not found' });
                 return;
             }
-            const room=this.roomsService.joinRoom(roomId,playerName,socket.id);
+            const room = this.roomsService.joinRoom(roomId, playerName, socket.id);
             socket.join(roomId);
-            socket.emit('joinedRoom',room);
-            console.log('Player joined room:', roomId);
+            socket.emit('roomJoined', room);
+
 
         }catch(err){
             console.error('Error joining room:', err);
@@ -61,17 +62,19 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
     }
 
+    @SubscribeMessage('selectColor')
     handleSelectColor(socket: Socket, data: any): void {
         try{
             const { roomId, playerId, color } = data;
             console.log(`Player ${playerId} selecting color ${color} in room: ${roomId}`);
             const room = this.roomsService.selectColor(roomId, playerId, color);
             if (!room) {
-                socket.emit('error', { message: 'Room not found or color unavailable' });
+
+                socket.emit('error', { message: 'Room not found or color not available' });
                 return;
             }
             this.server.to(roomId).emit('colorSelected', { playerId, color });
-            console.log(`Player ${playerId} selected color ${color} in room: ${roomId}`);
+
         }catch(err){
             console.error('Error selecting color:', err);
             socket.emit('error', { message: 'Failed to select color' });
@@ -91,12 +94,12 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
                     return;
                 }
                 this.server.to(roomId).emit('userDisconnected', { playerId });
-                console.log(`Player ${playerId} disconnected from room: ${roomId}`);
+
             } catch (err) {
                 console.error('Error disconnecting user:', err);
                 socket.emit('error', { message: 'Failed to disconnect user' });
             }
-        }  
 
-    
+        }   
+
 }
