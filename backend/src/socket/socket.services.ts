@@ -23,11 +23,10 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
     maxUsers: number;
     usersInQueue: string[];
   }
-
+  const GameState = new Map<string, GameState>();
   const ladderVals: [number, number][] = [[5, 58], [42, 60], [14, 49], [53, 72], [64, 83], [75, 94]];
   const snakeVals: [number, number][] = [[38, 20], [45, 7], [51, 10], [65, 54], [97, 61], [91, 73]];
 
-  const GameState = new Map<string, GameState>();
   const ladder = new Map<number, number>(ladderVals);
   const snakes = new Map<number, number>(snakeVals);
 

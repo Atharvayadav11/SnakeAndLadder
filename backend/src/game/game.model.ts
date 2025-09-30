@@ -10,19 +10,22 @@ export interface Player {
     isActive: boolean;
 }
 
-export interface GameState {
-    roomId: string;
-    players: Player[];
-    currentPlayerIndex: number;
-    gameStatus: 'waiting' | 'playing' | 'finished';
-    winner?: string;
-    diceValue?: number;
-    lastMove?: {
-        playerId: string;
-        fromPosition: number;
-        toPosition: number;
-        diceValue: number;
-    };
+export interface UserModel{
+    name:string,
+    color:string
+    currentPosition:number,
+    isAnAdmin:boolean,
+    isActive:boolean
+}
+
+export interface GameState{
+    Users: Map<string,UserModel>;
+    winner:string;
+    currentUserToPlay:string;
+    isGameStarted:boolean;
+    isGameFinished:boolean;
+    maxUsers:number;
+    usersInQueue:string[];
 }
 
 export interface Snake {

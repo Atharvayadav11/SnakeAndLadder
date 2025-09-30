@@ -73,6 +73,7 @@ export class SocketService {
         this.currentUser.set(data.GameData.usersInQueue[0]);
       }
       
+
       this.moveCallbacks.forEach(cb => cb(playerId, val));
     });
 
