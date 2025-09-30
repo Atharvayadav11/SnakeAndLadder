@@ -15,7 +15,7 @@ getRoomById(id: string):any {
         const gameState = this.gameService.getGameState(id);
     }
 
-    createRoom(playerName: string, customId?: string, userId?: string): GameStateModel {
+createRoom(playerName: string, customId?: string, userId?: string): GameStateModel {
         const roomId = (customId && customId.trim().length > 0) ? customId.trim() : uuidv4();
 if(this.gameService.getGameState(roomId)){
     throw new Error('Room with this ID already exists');
@@ -44,7 +44,7 @@ if(this.gameService.getGameState(roomId)){
         return newRoom;
     }
 
-    joinRoom(roomId: string, playerName: string,userId:string): GameStateModel | null {
+joinRoom(roomId: string, playerName: string,userId:string): GameStateModel | null {
         const room = this.gameService.getGameState(roomId);
         if (!room) return null;
         if (room.Users.size >= room.maxUsers) {
@@ -62,7 +62,7 @@ if(this.gameService.getGameState(roomId)){
         return room;
     }
 
-selectColor(roomId: any, playerId: any, color: any) {
+selectColor(roomId: any, playerId: any, color: any): GameStateModel | null {   
         const room = this.gameService.getGameState(roomId);
         if (!room) {
             throw new Error('Room not found');
@@ -82,5 +82,18 @@ selectColor(roomId: any, playerId: any, color: any) {
     }
 
 
+handleUserDisconnect(roomId: string, playerId: string): GameStateModel | null {
+        const room = this.gameService.getGameState(roomId);
+        if (!room) return null;
+        const user = room.Users.get(playerId);
+        if (user) {
+            user.isActive = false;
+            room.Users.set(playerId, user);
+            room.availableColors.push(user.color);
+            user.color = '';
+        }
+        this.gameService['gameState'].set(roomId, room);
+        return room;
+    }
 
 }
