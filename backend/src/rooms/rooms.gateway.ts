@@ -9,7 +9,7 @@ import { GameService } from "src/game/game.service";
         origin: '*'
     }
 })
-export class RoomsGateway implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect {
+export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
     server: Server;
 
