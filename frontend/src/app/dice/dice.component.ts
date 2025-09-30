@@ -81,8 +81,8 @@ import { UserService } from '../services/users.service';
     }
 
     .dice-display {
-      width: 80px;
-      height: 80px;
+      width: 100px;
+      height: 100px;
       background: white;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -107,11 +107,14 @@ import { UserService } from '../services/users.service';
       width: 100%;
       height: 100%;
       position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     .dice-dots {
-      width: 100%;
-      height: 100%;
+      width: 75%;
+      height: 75%;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
