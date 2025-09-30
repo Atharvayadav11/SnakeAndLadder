@@ -8,4 +8,5 @@ import { UserModel } from "./user";
     isGameFinished: boolean;
     maxUsers: number;
     usersInQueue: string[];
+    availableColors: string[];
   }

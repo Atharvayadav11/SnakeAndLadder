@@ -2,6 +2,7 @@ import { WebSocketGateway,WebSocketServer,OnGatewayConnection,OnGatewayInit,OnGa
 import { Server, Socket } from "socket.io";
 import { RoomsService } from "./rooms.service";
 import { Room } from "./rooms.model";
+import { GameService } from "src/game/game.service";
 
 @WebSocketGateway({
     cors: {
@@ -14,6 +15,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayInit, OnGatew
 
     constructor(private readonly roomsService: RoomsService) {}
 
+
     handleConnection(client: Socket) {
         console.log('client connected: ', client.id);
     }
@@ -23,7 +25,32 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayInit, OnGatew
     }
 
     @SubscribeMessage('createRoom')
-    handleCreateRoom(client: Socket, payload: any): void {
-        console.log('creating a room for client:',client.id)
+    handleCreateRoom(socket: Socket, data: any): void {
+        console.log('creating a room for client:',socket.id)
+
+        try{
+            const room=this.roomsService.createRoom(data.playerName,data.roomId,data.userId);
+             socket.join(room.id);
+             socket.emit('roomCreated',room);
+             console.log('Room created:', room.id);
+            
+        }catch(err){
+            console.error('Error creating room:', err);
+            socket.emit('error', { message: 'Failed to create room' });
+        }
+    }
+
+    @SubscribeMessage('joinRoom')
+    handleJoinRoom(socket: Socket, data: any): void {
+    
+        try{
+            const { roomId, playerName } = data;
+            console.log(`Player ${playerName} joining room: ${roomId}`);
+            if()
+
+        }catch(err){
+            console.error('Error joining room:', err);
+            socket.emit('error', { message: 'Failed to join room' });
+        }
     }
 }

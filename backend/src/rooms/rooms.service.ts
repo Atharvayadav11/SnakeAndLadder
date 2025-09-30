@@ -1,33 +1,86 @@
 import { Injectable } from "@nestjs/common";    
-import { Room } from './rooms.model';
+
 import { v4 as uuidv4 } from 'uuid';
+import { GameService } from "src/game/game.service";
+import { UserModel } from '../models/user';
+import { GameStateModel } from "../models/gameState";
 
 @Injectable()
 export class RoomsService {
-    private rooms: Record<string, Room> = {};
+  
 
-    createRoom(playerName: string, customId?: string): Room {
+    constructor(private gameService:GameService){}
+
+getRoomById(id: string):any {
+        const gameState = this.gameService.getGameState(id);
+    }
+
+    createRoom(playerName: string, customId?: string, userId?: string): Room {
         const roomId = (customId && customId.trim().length > 0) ? customId.trim() : uuidv4();
-        if (this.rooms[roomId]) {
-            throw new Error('Room ID already exists');
-        }
-        const newRoom: Room = { id: roomId, players: [playerName] };
-        this.rooms[roomId] = newRoom;
+if(this.gameService.getGameState(roomId)){
+    throw new Error('Room with this ID already exists');
+}
+
+   const newRoom: GameStateModel = {
+    Users: userId ? new Map<string, UserModel>([
+        [userId, {
+            id: userId,
+            name: playerName,
+            color: '',
+            currentPosition: 0,
+            isAnAdmin: true,
+            isActive: true
+        } as UserModel]
+    ]) : new Map<string, UserModel>(),
+    maxUsers: 4,
+    isGameStarted: false,
+    isGameFinished: false,
+    currentUserToPlay: '',
+    winner: '',
+    usersInQueue: [],
+    availableColors: ["red", "blue", "green", "yellow"]
+   }
+   this.gameService['gameState'].set(roomId,newRoom);
         return newRoom;
-    }        
-    
-    joinRoom(roomId: string, playerName: string): Room | null {
-        const room = this.rooms[roomId];
+    }
+
+    joinRoom(roomId: string, playerName: string,userId:string): Room | null {
+        const room = this.gameService.getGameState(roomId);
         if (!room) return null;
-        room.players.push(playerName);
+        if (room.Users.size >= room.maxUsers) {
+            throw new Error('Room is full');
+        }
+        const newUser: UserModel = {
+            name: playerName,
+            color: '',
+            currentPosition: 0,
+            isAnAdmin: false,
+            isActive: true
+        };
+       room.Users.set(userId,newUser);
+       room.usersInQueue.push(userId);
         return room;
     }
 
-    getPlayers(id: string): string[] {
-        return this.rooms[id]?.players || [];
+selectColor(roomId: any, playerId: any, color: any) {
+        const room = this.gameService.getGameState(roomId);
+        if (!room) {
+            throw new Error('Room not found');
+        }
+        if (!room.availableColors.includes(color)) {
+            throw new Error('Color not available');
+        }
+        const user = room.Users.get(playerId);
+        if (!user) {
+            throw new Error('User not found in room');
+        }
+        user.color = color;
+        room.availableColors = room.availableColors.filter(c => c !== color);
+        room.Users.set(playerId, user);
+        this.gameService['gameState'].set(roomId, room);
+        return room;
     }
 
-    getRoomById(id: string): Room | null {
-        return this.rooms[id] || null;
-    }
+
+
 }
