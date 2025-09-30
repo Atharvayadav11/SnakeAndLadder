@@ -1,4 +1,4 @@
-import { WebSocketGateway,WebSocketServer,OnGatewayConnection,OnGatewayInit,OnGatewayDisconnect, SubscribeMessage } from "@nestjs/websockets";
+import { WebSocketGateway,WebSocketServer,OnGatewayConnection,OnGatewayInit,OnGatewayDisconnect, SubscribeMessage ,MessageBody} from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import { RoomsService } from "./rooms.service";
 
@@ -25,7 +25,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     @SubscribeMessage('createRoom')
-    handleCreateRoom(socket: Socket, data: any): void {
+    handleCreateRoom(@MessageBody() data: {playerName: string, roomId: string, userId: string}, socket: Socket): void {
         console.log('creating a room for client:',socket.id)
 
         try{
@@ -41,7 +41,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     @SubscribeMessage('joinRoom')
-    handleJoinRoom(socket: Socket, data: any): void {
+    handleJoinRoom(@MessageBody() data: {roomId: string, playerName: string}, socket: Socket): void {
     
         try{
             const { roomId, playerName } = data;
@@ -60,7 +60,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
     }
     @SubscribeMessage('selectColor')
-    handleSelectColor(socket: Socket, data: any): void {
+    handleSelectColor(@MessageBody() data: {roomId: string, playerId: string, color: string}, socket: Socket): void {
         try{
             const { roomId, playerId, color } = data;
             console.log(`Player ${playerId} selecting color ${color} in room: ${roomId}`);
@@ -79,7 +79,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
      @SubscribeMessage('userDisconnected')
-        handleUserDisconnected(socket: Socket, data: any): void {
+        handleUserDisconnected(@MessageBody() data: {roomId: string, playerId: string}, socket: Socket): void {
             try {
                 const { roomId, playerId } = data;
                 console.log(`Player ${playerId} disconnecting from room: ${roomId}`);
