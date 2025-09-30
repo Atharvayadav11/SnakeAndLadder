@@ -1,36 +1,40 @@
 import { WebSocketGateway, OnGatewayConnection, WebSocketServer, SubscribeMessage, MessageBody } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { GameService } from './game.service';
+import { StartGameDto } from 'src/dto/startGame.dto';
 
-@WebSocketGateway({cors: true})
-export class GameGateway implements OnGatewayConnection {
+@WebSocketGateway({ cors: true })
+export class GameGateway {
   @WebSocketServer()
-  socket: Socket;
-
-  constructor(private gameService: GameService){}
-  handleConnection(client: Socket) {
-    console.log('Player connected:', client.id);
-  }
-
-  handleDisconnect(client: Socket) {
-    console.log('Player disconnected:', client.id);
-  }
+  server: Server;
+  constructor(private gameService: GameService) { }
 
   @SubscribeMessage('startGame')
-  handleGameStart(@MessageBody() data: {playerId: string, roomId: string}, client: Socket){
+  handleGameStart(@MessageBody() data: StartGameDto, client: Socket) {
     try {
-        const val = this.gameService.onStartGame(data.playerId, data.roomId);
-        this.socket.to(data.roomId).emit('gameStarted', {playerId: data.playerId, roomId: data.roomId});
+      this.gameService.onStartGame(data.playerId, data.roomId);
+      this.server.to(data.roomId).emit('gameStarted', { playerId: data.playerId, roomId: data.roomId });
     } catch (error) {
-        client.emit('gameStartError',{message: error.message});
+      client.emit('gameStartError', { message: error.message });
     }
   }
 
   @SubscribeMessage('rollDice')
-  handleDiceRoll(@MessageBody() data: {playerId: string, roomId: string}){
-    const val = this.gameService.onRollDice(data.playerId, data.roomId);
-    this.socket.to(data.roomId).emit('diceRolled', {playerId: data.playerId, val}); 
+  handleDiceRoll(@MessageBody() data: StartGameDto, client: Socket) {
+    try {
+      const val = this.gameService.onRollDice(data.playerId, data.roomId);
+
+      const state = this.gameService.getGameState(data.roomId);
+      if (state.isGameFinished && state.winner) {
+        this.server.to(data.roomId).emit("gameWon", { playerId: data.playerId, roomId: data.roomId });
+      }
+      else {
+        this.server.to(data.roomId).emit('diceRolled', { playerId: data.playerId, val });
+      }
+    } catch (error) {
+      client.emit('rollDiceError', { message: error.message });
+    }
   }
-  
+
 }
 

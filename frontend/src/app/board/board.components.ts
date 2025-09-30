@@ -19,9 +19,10 @@ import { SocketService } from '../services/socket.services';
 })
 export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('canvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
-
   private ctx!: CanvasRenderingContext2D;
   private boardImage = new Image();
+
+  // Board Service
   socketService = inject(SocketService);
 
   animating = false;
@@ -112,14 +113,8 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
   private redrawBoard() {
     const canvas = this.canvasRef.nativeElement;
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    
-    // Draw background
     this.ctx.fillStyle = 'transparent';
-    
     this.ctx.fillRect(150, 0, canvas.width, canvas.height);
-    
-    // Draw board image if loaded
 
     if (this.boardImage.complete && this.boardImage.naturalHeight !== 0) {
       this.ctx.drawImage(this.boardImage, 150, 0, 600, 600);
@@ -134,24 +129,22 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
 
     let playerIndex = 0;
     for (const [playerId, user] of usersIterator) {
-      // Skip the player that is currently animating
       if (playerId === this.animatingPlayerId) {
         playerIndex++;
         continue;
       }
       if (user.currentPosition === 0) {
         const startPos = this.STARTING_POSITIONS[playerIndex % 4];
-        this.drawBall(startPos.x, startPos.y, user.color, playerId);
+        this.drawBall(startPos.x, startPos.y, user.color);
       } else {
         const { x, y } = this.getCoords(user.currentPosition);
-        this.drawBall(x, y, user.color, playerId);
+        this.drawBall(x, y, user.color);
       }
       playerIndex++;
     }
   }
 
-
-  private drawBall(x: number, y: number, color: string, playerId: string) {
+  private drawBall(x: number, y: number, color: string) {
     const img = this.playerImages[color];
 
     if (img && img.complete) {
@@ -176,7 +169,6 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
     const y = 600 - row * 60 - 30;
     let x;
 
-    // Snake and ladder board pattern (zigzag)
     if (row % 2 === 0) {
       x = 150+col * 60 + 30;
     } else {
@@ -196,7 +188,6 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.animating = true;
     this.animatingPlayerId = playerId;
 
-    // Get player's starting position outside board
     let playerIndex = 0;
     for (const [id] of this.socketService.getUsers()) {
       if (id === playerId) break;
@@ -226,7 +217,7 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
       const y = startPos.y + (endPos.y - startPos.y) * easedT - hopHeight * Math.sin(Math.PI * easedT);
 
       this.redrawBoard();
-      this.drawBall(x, y, user.color, playerId);
+      this.drawBall(x, y, user.color);
 
       if (progress < duration) {
         requestAnimationFrame(animate);
@@ -267,7 +258,7 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
       const y = start.y + (end.y - start.y) * t - hopHeight * Math.sin(Math.PI * t);
 
       this.redrawBoard();
-      this.drawBall(x, y, user.color, playerId);
+      this.drawBall(x, y, user.color);
 
       if (progress < duration) {
         requestAnimationFrame(animate);
@@ -322,7 +313,6 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Check for snake
     if (this.SNAKES[position]) {
       const snakeEnd = this.SNAKES[position];
       console.log(`Snake! Player ${playerId} goes from ${position} to ${snakeEnd}`);
@@ -378,7 +368,7 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
       const y = start.y + (end.y - start.y) * t;
 
       this.redrawBoard();
-      this.drawBall(x, y, user.color, playerId);
+      this.drawBall(x, y, user.color);
 
       if (progress < duration) {
         requestAnimationFrame(animate);

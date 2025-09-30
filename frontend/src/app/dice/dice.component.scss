@@ -1,254 +1,127 @@
-* {
-  margin: 0;
-  padding: 0;
-  vertical-align: baseline;
-}
+.dice-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
 
-#main {
-  font-family: system-ui, sans-serif;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  padding: 1rem;
-}
+    .dice-display {
+      width: 100px;
+      height: 100px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease;
+    }
 
-.dice {
-  align-items: center;
-  display: flex;
-  justify-content: center;
-  perspective: 600px;
-  margin-bottom: 0.75rem;
-}
+    .dice-display.rolling {
+      animation: roll 0.5s ease-in-out;
+    }
 
-.die-list {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
-  height: 3.5rem;
-  width: 3.5rem;
-  list-style-type: none;
-  transform-style: preserve-3d;
-  transition: transform 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
+    @keyframes roll {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(90deg) scale(1.1); }
+      50% { transform: rotate(180deg) scale(1.2); }
+      75% { transform: rotate(270deg) scale(1.1); }
+    }
 
-// Rolling animation - continuous spin while waiting for backend
-.die-list.rolling {
-  animation: continuousSpin 0.8s linear infinite;
-}
+    .dice-face {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-@keyframes continuousSpin {
-  0% {
-    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
-  }
-  100% {
-    transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg);
-  }
-}
+    .dice-dots {
+      width: 75%;
+      height: 75%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 8px;
+      position: relative;
+    }
 
-// Smooth landing animations
-.even-roll {
-  transition: transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
+    .dot {
+      width: 12px;
+      height: 12px;
+      background: #333;
+      border-radius: 50%;
+      position: absolute;
+    }
 
-.odd-roll {
-  transition: transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
+    .dot.top-left { top: 12px; left: 12px; }
+    .dot.top-right { top: 12px; right: 12px; }
+    .dot.middle-left { top: 50%; left: 12px; transform: translateY(-50%); }
+    .dot.middle-right { top: 50%; right: 12px; transform: translateY(-50%); }
+    .dot.bottom-left { bottom: 12px; left: 12px; }
+    .dot.bottom-right { bottom: 12px; right: 12px; }
+    .dot.center { 
+      top: 50%; 
+      left: 50%; 
+      transform: translate(-50%, -50%); 
+    }
 
-.die-item {
-  background: linear-gradient(145deg, #ffffff, #f0f0f0);
-  box-shadow: 
-    inset -0.2rem 0.2rem 0.4rem rgba(0, 0, 0, 0.2),
-    inset 0.3rem -0.15rem 0.3rem rgba(0, 0, 0, 0.1),
-    0 0 10px rgba(0, 0, 0, 0.15);
-  border-radius: 0.3rem;
-  display: grid;
-  grid-column: 1;
-  grid-row: 1;
-  grid-template-areas:
-    "one two three"
-    "four five six"
-    "seven eight nine";
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  height: 100%;
-  width: 100%;
-  padding: 0.4rem;
-}
+    .dice-placeholder {
+      font-size: 32px;
+      font-weight: bold;
+      color: #999;
+    }
 
-.dot {
-  align-self: center;
-  background: linear-gradient(145deg, #4a4a4a, #2a2a2a);
-  border-radius: 50%;
-  box-shadow: 
-    inset -0.1rem 0.1rem 0.15rem rgba(0, 0, 0, 0.5),
-    0 1px 2px rgba(0, 0, 0, 0.3);
-  display: block;
-  height: 0.5rem;
-  width: 0.5rem;
-  justify-self: center;
-}
+    .roll-button {
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background: linear-gradient(145deg, #4CAF50, #45a049);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
 
-// Roll transformations for landing positions
-.even-roll[data-roll="1"] {
-  transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg);
-}
-.even-roll[data-roll="2"] {
-  transform: rotateX(450deg) rotateY(720deg) rotateZ(360deg);
-}
-.even-roll[data-roll="3"] {
-  transform: rotateX(360deg) rotateY(630deg) rotateZ(360deg);
-}
-.even-roll[data-roll="4"] {
-  transform: rotateX(360deg) rotateY(810deg) rotateZ(360deg);
-}
-.even-roll[data-roll="5"] {
-  transform: rotateX(270deg) rotateY(720deg) rotateZ(360deg);
-}
-.even-roll[data-roll="6"] {
-  transform: rotateX(360deg) rotateY(900deg) rotateZ(360deg);
-}
+    .roll-button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
 
-.odd-roll[data-roll="1"] {
-  transform: rotateX(-360deg) rotateY(-720deg) rotateZ(-360deg);
-}
-.odd-roll[data-roll="2"] {
-  transform: rotateX(-270deg) rotateY(-720deg) rotateZ(-360deg);
-}
-.odd-roll[data-roll="3"] {
-  transform: rotateX(-360deg) rotateY(-810deg) rotateZ(-360deg);
-}
-.odd-roll[data-roll="4"] {
-  transform: rotateX(-360deg) rotateY(-630deg) rotateZ(-360deg);
-}
-.odd-roll[data-roll="5"] {
-  transform: rotateX(-450deg) rotateY(-720deg) rotateZ(-360deg);
-}
-.odd-roll[data-roll="6"] {
-  transform: rotateX(-360deg) rotateY(-900deg) rotateZ(-360deg);
-}
+    .roll-button:active:not(:disabled) {
+      transform: translateY(0);
+    }
 
-// 3D positioning of dice faces
-[data-side="1"] {
-  transform: rotate3d(0, 0, 0, 90deg) translateZ(1.75rem);
-}
-[data-side="2"] {
-  transform: rotate3d(-1, 0, 0, 90deg) translateZ(1.75rem);
-}
-[data-side="3"] {
-  transform: rotate3d(0, 1, 0, 90deg) translateZ(1.75rem);
-}
-[data-side="4"] {
-  transform: rotate3d(0, -1, 0, 90deg) translateZ(1.75rem);
-}
-[data-side="5"] {
-  transform: rotate3d(1, 0, 0, 90deg) translateZ(1.75rem);
-}
-[data-side="6"] {
-  transform: rotate3d(1, 0, 0, 180deg) translateZ(1.75rem);
-}
+    .roll-button:disabled,
+    .roll-button.disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
 
-// Dot positioning for each face
-[data-side="1"] .dot:nth-of-type(1) {
-  grid-area: five;
-}
-[data-side="2"] .dot:nth-of-type(1) {
-  grid-area: one;
-}
-[data-side="2"] .dot:nth-of-type(2) {
-  grid-area: nine;
-}
-[data-side="3"] .dot:nth-of-type(1) {
-  grid-area: one;
-}
-[data-side="3"] .dot:nth-of-type(2) {
-  grid-area: five;
-}
-[data-side="3"] .dot:nth-of-type(3) {
-  grid-area: nine;
-}
-[data-side="4"] .dot:nth-of-type(1) {
-  grid-area: one;
-}
-[data-side="4"] .dot:nth-of-type(2) {
-  grid-area: three;
-}
-[data-side="4"] .dot:nth-of-type(3) {
-  grid-area: seven;
-}
-[data-side="4"] .dot:nth-of-type(4) {
-  grid-area: nine;
-}
-[data-side="5"] .dot:nth-of-type(1) {
-  grid-area: one;
-}
-[data-side="5"] .dot:nth-of-type(2) {
-  grid-area: three;
-}
-[data-side="5"] .dot:nth-of-type(3) {
-  grid-area: five;
-}
-[data-side="5"] .dot:nth-of-type(4) {
-  grid-area: seven;
-}
-[data-side="5"] .dot:nth-of-type(5) {
-  grid-area: nine;
-}
-[data-side="6"] .dot:nth-of-type(1) {
-  grid-area: one;
-}
-[data-side="6"] .dot:nth-of-type(2) {
-  grid-area: three;
-}
-[data-side="6"] .dot:nth-of-type(3) {
-  grid-area: four;
-}
-[data-side="6"] .dot:nth-of-type(4) {
-  grid-area: six;
-}
-[data-side="6"] .dot:nth-of-type(5) {
-  grid-area: seven;
-}
-[data-side="6"] .dot:nth-of-type(6) {
-  grid-area: nine;
-}
+    .turn-info {
+      text-align: center;
+      margin-top: 1rem;
+    }
 
-button {
-  background: linear-gradient(145deg, #ffffff, #f0f0f0);
-  border: none;
-  color: #333;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.2),
-    inset 0 -1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+    .current-turn {
+      font-size: 14px;
+      color: #666;
+      margin: 0;
+    }
 
-  &:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 
-      0 4px 12px rgba(0, 0, 0, 0.3),
-      inset 0 -1px 3px rgba(0, 0, 0, 0.1);
-    background: linear-gradient(145deg, #ffffff, #e8e8e8);
-  }
+    .your-turn {
+      font-size: 16px;
+      color: #4CAF50;
+      font-weight: bold;
+      margin: 0.5rem 0 0;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
 
-  &:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: 
-      0 1px 4px rgba(0, 0, 0, 0.2),
-      inset 0 1px 3px rgba(0, 0, 0, 0.15);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }

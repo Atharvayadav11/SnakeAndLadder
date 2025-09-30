@@ -1,42 +1,59 @@
-<div id="main">
-  <div class="dice">
-    <ol class="die-list" id="die-1" #dieElement>
-      <li class="die-item" data-side="1">
-        <span class="dot"></span>
-      </li>
-      <li class="die-item" data-side="2">
-        <span class="dot"></span>
-        <span class="dot"></span>
-      </li>
-      <li class="die-item" data-side="3">
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-      </li>
-      <li class="die-item" data-side="4">
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-      </li>
-      <li class="die-item" data-side="5">
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-      </li>
-      <li class="die-item" data-side="6">
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-      </li>
-    </ol>
+<div class="dice-container">
+  <div class="dice-display" [class.rolling]="isRolling()">
+    <div class="dice-face" *ngIf="diceValue(); else placeholder">
+      <div class="dice-dots">
+        @switch (diceValue()) {
+        @case (1) {
+        <span class="dot center"></span>
+        }
+        @case (2) {
+        <span class="dot top-left"></span>
+        <span class="dot bottom-right"></span>
+        }
+        @case (3) {
+        <span class="dot top-left"></span>
+        <span class="dot center"></span>
+        <span class="dot bottom-right"></span>
+        }
+        @case (4) {
+        <span class="dot top-left"></span>
+        <span class="dot top-right"></span>
+        <span class="dot bottom-left"></span>
+        <span class="dot bottom-right"></span>
+        }
+        @case (5) {
+        <span class="dot top-left"></span>
+        <span class="dot top-right"></span>
+        <span class="dot center"></span>
+        <span class="dot bottom-left"></span>
+        <span class="dot bottom-right"></span>
+        }
+        @case (6) {
+        <span class="dot top-left"></span>
+        <span class="dot top-right"></span>
+        <span class="dot middle-left"></span>
+        <span class="dot middle-right"></span>
+        <span class="dot bottom-left"></span>
+        <span class="dot bottom-right"></span>
+        }
+        }
+      </div>
+    </div>
+    <ng-template #placeholder>
+      <div class="dice-placeholder">?</div>
+    </ng-template>
   </div>
-  <button type="button" id="roll-button" (click)="rollDice()" [disabled]="isRolling || !canRollDice()">
-    {{ isRolling ? 'Rolling...' : 'Roll Dice' }}
+
+  <button class="roll-button" (click)="rollDice()" [disabled]="!canRoll()" [class.disabled]="!canRoll()">
+    {{ buttonText() }}
   </button>
+
+  <div class="turn-info" *ngIf="currentPlayer()">
+    <p class="current-turn">
+      Current Turn: <strong>{{ currentPlayerName() }}</strong>
+    </p>
+    <p class="your-turn" *ngIf="isYourTurn()">
+      🎲 It's your turn!
+    </p>
+  </div>
 </div>
