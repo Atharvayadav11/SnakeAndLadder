@@ -3,36 +3,83 @@ import {
   ElementRef,
   OnInit,
   AfterViewInit,
-  ViewChild
+  ViewChild,
+  inject,
+  OnDestroy
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { DiceComponent } from "../dice/dice.component";
+import { SocketService } from '../services/socket.services';
 
 @Component({
   selector: 'app-board',
   templateUrl: './board.component.html',
-  styleUrls: ['./board.component.css'],
-  imports: [DiceComponent]
+  styleUrls: ['./board.component.scss'],
+  imports: [DiceComponent, CommonModule]
 })
-export class BoardComponent implements OnInit, AfterViewInit {
+export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('canvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private ctx!: CanvasRenderingContext2D;
   private boardImage = new Image();
+  socketService = inject(SocketService);
 
-  currentCell = 1;
   animating = false;
+  private readonly STARTING_POSITIONS = [
+    { x: 650, y: 100 },  
+    { x: 650, y: 200 },  
+    { x: 650, y: 300 },   
+    { x: 650, y: 400 }    
+  ];
+
+  private readonly LADDERS: { [key: number]: number } = {
+  5: 58,
+  42: 60,
+  14: 49,
+  53: 72,
+  64: 83,
+  75: 94
+};
+
+private readonly SNAKES: { [key: number]: number } = {
+  38: 20,
+  45: 7,
+  51: 10,
+  65: 54,
+  97: 61,
+  91: 73
+};
 
   ngOnInit() {
     this.boardImage.src = 'image.png';
     this.socketService.onMove((playerId: string, val: number) => {
-      const user = this.socketService.getUser(playerId);
-      console.log("User" + user);
+      console.log(`Player ${playerId} rolled ${val}`);
       
-      if (user) {
-        this.hopToCell(playerId, Math.min(user.currentPosition + val, 100));
+      const user = this.socketService.getUser(playerId);
+      if (!user) {
+        console.error(`User ${playerId} not found`);
+        return;
+      }
+      
+      if (user.currentPosition === 0 && val === 6) {
+        console.log(`Player ${playerId} enters the board!`);
+        this.enterBoard(playerId);
+      } else if (user.currentPosition > 0) {
+        const targetPosition = Math.min(user.currentPosition + val, 100);
+        console.log(`Player ${playerId} moves from ${user.currentPosition} to ${targetPosition}`);
+        this.hopToCell(playerId, targetPosition);
+      } else {
+        console.log(`Player ${playerId} stays outside (rolled ${val}, needs 6 to enter)`);
+        // Player stays outside, just redraw
+        this.redrawBoard();
       }
     });
 
+    // Listen for game started event to initialize board
+    this.socketService.onGameStarted().subscribe((data) => {
+      console.log('Game started!', data);
+      setTimeout(() => this.redrawBoard(), 100);
+    });
   }
 
   ngAfterViewInit() {
@@ -40,35 +87,77 @@ export class BoardComponent implements OnInit, AfterViewInit {
     this.ctx = canvas.getContext('2d')!;
 
     this.boardImage.onload = () => {
-      this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-      this.drawGrid();
-      // do not place the piece on cell 1 initially; pieces shown outside via HTML
+      console.log('Board image loaded');
+      this.redrawBoard();
+    };
+
+    // Fallback: if image doesn't load, still draw the board
+    this.boardImage.onerror = () => {
+      console.warn('Board image failed to load, drawing without background');
+      this.redrawBoard();
     };
   }
 
-  private drawGrid() {
-    const canvas = this.canvasRef.nativeElement;
-    this.ctx.beginPath();
-    this.ctx.drawImage(this.boardImage, 0, 0, canvas.width, canvas.height);
-
-    for (let x = 0; x <= 600; x += 60) {
-      this.ctx.moveTo(x, 0);
-      this.ctx.lineTo(x, 600);
-    }
-
-    for (let y = 0; y <= 600; y += 60) {
-      this.ctx.moveTo(0, y);
-      this.ctx.lineTo(600, y);
-    }
-
-    this.ctx.stroke();
+  ngOnDestroy() {
+    // Cleanup if needed
   }
 
-  private drawBall(x: number, y: number) {
+  private redrawBoard() {
+    const canvas = this.canvasRef.nativeElement;
+    this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw background
+    this.ctx.fillStyle = '#f5f5dc';
+    this.ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw board image if loaded
+    if (this.boardImage.complete && this.boardImage.naturalHeight !== 0) {
+      this.ctx.drawImage(this.boardImage, 0, 0, 600, 600);
+    }
+
+    // Draw all users
+    const usersIterator = this.socketService.getUsers();
+    if (!usersIterator) {
+      console.warn('No users found');
+      return;
+    }
+
+    let playerIndex = 0;
+    for (const [playerId, user] of usersIterator) {
+      if (user.currentPosition === 0) {
+        // Draw player outside the board
+        const startPos = this.STARTING_POSITIONS[playerIndex % 4];
+        this.drawBall(startPos.x, startPos.y, user.color, playerId);
+      } else {
+        // Draw player on the board
+        const { x, y } = this.getCoords(user.currentPosition);
+        this.drawBall(x, y, user.color, playerId);
+      }
+      playerIndex++;
+    }
+  }
+
+  private drawBall(x: number, y: number, color: string, playerId: string) {
     this.ctx.beginPath();
-    this.ctx.fillStyle = '#FFA500';
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    this.ctx.arc(x + 2, y + 2, 12, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    this.ctx.beginPath();
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.arc(x, y, 12, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    this.ctx.beginPath();
+    this.ctx.fillStyle = color;
     this.ctx.arc(x, y, 10, 0, Math.PI * 2);
     this.ctx.fill();
+
+    this.ctx.fillStyle = "white";
+    this.ctx.font = "bold 10px Arial";
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "middle";
+    this.ctx.fillText(playerId[0].toUpperCase(), x, y);
   }
 
   private getCoords(cell: number) {
@@ -78,6 +167,7 @@ export class BoardComponent implements OnInit, AfterViewInit {
     const y = 600 - row * 60 - 30;
     let x;
 
+    // Snake and ladder board pattern (zigzag)
     if (row % 2 === 0) {
       x = col * 60 + 30;
     } else {
@@ -87,35 +177,91 @@ export class BoardComponent implements OnInit, AfterViewInit {
     return { x, y };
   }
 
-  private hopOneStep(startCell: number, nextCell: number, callback: () => void) {
-    const start = this.getCoords(startCell);
-    const end = this.getCoords(nextCell);
+  private enterBoard(playerId: string) {
+    if (this.animating) {
+      console.log('Already animating, queuing...');
+      setTimeout(() => this.enterBoard(playerId), 100);
+      return;
+    }
+    
+    this.animating = true;
+
+    // Get player's starting position outside board
+    let playerIndex = 0;
+    for (const [id] of this.socketService.getUsers()) {
+      if (id === playerId) break;
+      playerIndex++;
+    }
+
+    const startPos = this.STARTING_POSITIONS[playerIndex % 4];
+    const endPos = this.getCoords(1); 
+    const user = this.socketService.getUser(playerId);
+
+    if (!user) {
+      console.error(`User ${playerId} not found during enter animation`);
+      this.animating = false;
+      return;
+    }
 
     let progress = 0;
-    const duration = 50;
+    const duration = 80;
 
     const animate = () => {
-      const canvas = this.canvasRef.nativeElement;
-
-      this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-      this.drawGrid();
-
       progress++;
       const t = progress / duration;
+      const easedT = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 
-      const x = start.x + (end.x - start.x) * t;
-      const hopHeight = 20;
-      const y =
-        start.y +
-        (end.y - start.y) * t -
-        hopHeight * Math.sin(Math.PI * t);
+      const x = startPos.x + (endPos.x - startPos.x) * easedT;
+      const hopHeight = 50;
+      const y = startPos.y + (endPos.y - startPos.y) * easedT - hopHeight * Math.sin(Math.PI * easedT);
 
-      this.drawBall(x, y);
+      this.redrawBoard();
+      this.drawBall(x, y, user.color, playerId);
 
       if (progress < duration) {
         requestAnimationFrame(animate);
       } else {
-        this.currentCell = nextCell;
+        // Update position to 1
+        this.socketService.updateUserPosition(playerId, 1);
+        this.redrawBoard();
+        this.animating = false;
+        console.log(`Player ${playerId} entered at position 1`);
+      }
+    };
+
+    animate();
+    this.hopToCell(playerId, 6);
+  }
+
+  private hopOneStep(playerId: string, startCell: number, nextCell: number, callback: () => void) {
+    const start = this.getCoords(startCell);
+    const end = this.getCoords(nextCell);
+    const user = this.socketService.getUser(playerId);
+
+    if (!user) {
+      console.error(`User ${playerId} not found during hop`);
+      callback();
+      return;
+    }
+
+    let progress = 0;
+    const duration = 30;
+
+    const animate = () => {
+      progress++;
+      const t = progress / duration;
+
+      const x = start.x + (end.x - start.x) * t;
+      const hopHeight = 25;
+      const y = start.y + (end.y - start.y) * t - hopHeight * Math.sin(Math.PI * t);
+
+      this.redrawBoard();
+      this.drawBall(x, y, user.color, playerId);
+
+      if (progress < duration) {
+        requestAnimationFrame(animate);
+      } else {
+        this.socketService.updateUserPosition(playerId, nextCell);
         callback();
       }
     };
@@ -123,20 +269,33 @@ export class BoardComponent implements OnInit, AfterViewInit {
     animate();
   }
 
-  private hopToCell(targetCell: number) {
-    if (this.animating) return;
+  private hopToCell(playerId: string, targetCell: number) {
+    if (this.animating) {
+      console.log('Already animating, queuing...');
+      setTimeout(() => this.hopToCell(playerId, targetCell), 100);
+      return;
+    }
+    
     this.animating = true;
 
-    let step = this.currentCell;
+    const user = this.socketService.getUser(playerId);
+    if (!user) {
+      console.error(`User ${playerId} not found during hop to cell`);
+      this.animating = false;
+      return;
+    }
+
+    let step = user.currentPosition;
 
     const doNextHop = () => {
-      if (step === targetCell) {
-        this.animating = false;
+      if (step >= targetCell) {
+        // Check for snakes and ladders
+        this.checkSnakesAndLadders(playerId, targetCell);
         return;
       }
 
       const nextStep = step + 1;
-      this.hopOneStep(step, nextStep, () => {
+      this.hopOneStep(playerId, step, nextStep, () => {
         step = nextStep;
         doNextHop();
       });
@@ -145,12 +304,118 @@ export class BoardComponent implements OnInit, AfterViewInit {
     doNextHop();
   }
 
-  onInputChange(event: Event) {
-    const val = parseInt((event.target as HTMLInputElement).value);
-    if (val >= 1 && val <= 100) {
-      this.hopToCell(Math.min(this.currentCell + val, 100));
-    } else {
-      alert('Enter a number between 1 and 100');
+  private checkSnakesAndLadders(playerId: string, position: number) {
+    const user = this.socketService.getUser(playerId);
+    if (!user) {
+      this.animating = false;
+      return;
     }
+
+    // Check for snake
+    if (this.SNAKES[position]) {
+      const snakeEnd = this.SNAKES[position];
+      console.log(`Snake! Player ${playerId} goes from ${position} to ${snakeEnd}`);
+      
+      setTimeout(() => {
+        this.slideToPosition(playerId, position, snakeEnd);
+      }, 500);
+      return;
+    }
+
+    // Check for ladder
+    if (this.LADDERS[position]) {
+      const ladderEnd = this.LADDERS[position];
+      console.log(`Ladder! Player ${playerId} climbs from ${position} to ${ladderEnd}`);
+      
+      setTimeout(() => {
+        this.slideToPosition(playerId, position, ladderEnd);
+      }, 500);
+      return;
+    }
+
+    // Check for win
+    if (position === 100) {
+      console.log(`Player ${playerId} wins!`);
+      this.showWinner(playerId);
+    }
+
+    this.animating = false;
+  }
+
+  private slideToPosition(playerId: string, from: number, to: number) {
+    const start = this.getCoords(from);
+    const end = this.getCoords(to);
+    const user = this.socketService.getUser(playerId);
+
+    if (!user) {
+      this.animating = false;
+      return;
+    }
+
+    let progress = 0;
+    const duration = 60;
+
+    const animate = () => {
+      progress++;
+      const t = progress / duration;
+
+      const x = start.x + (end.x - start.x) * t;
+      const y = start.y + (end.y - start.y) * t;
+
+      this.redrawBoard();
+      this.drawBall(x, y, user.color, playerId);
+
+      if (progress < duration) {
+        requestAnimationFrame(animate);
+      } else {
+        this.socketService.updateUserPosition(playerId, to);
+        this.redrawBoard();
+        this.animating = false;
+      }
+    };
+
+    animate();
+  }
+
+  private showWinner(playerId: string) {
+    const user = this.socketService.getUser(playerId);
+    if (!user) return;
+
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    this.ctx.fillRect(0, 0, 600, 600);
+
+    this.ctx.fillStyle = user.color;
+    this.ctx.font = 'bold 48px Arial';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillText(`${user.name} Wins!`, 300, 300);
+  }
+
+  getCurrentPlayerName(): string {
+    const currentPlayerId = this.socketService.currentUser();
+    if (!currentPlayerId) return 'Waiting...';
+    
+    const user = this.socketService.getUser(currentPlayerId);
+    return user?.name || currentPlayerId;
+  }
+
+  getPlayersList(): Array<{ id: string; name: string; color: string; currentPosition: number; isActive: boolean }> {
+    const players: Array<{ id: string; name: string; color: string; currentPosition: number; isActive: boolean }> = [];
+    
+    for (const [playerId, user] of this.socketService.getUsers()) {
+      players.push({
+        id: playerId,
+        name: user.name,
+        color: user.color,
+        currentPosition: user.currentPosition,
+        isActive: user.isActive
+      });
+    }
+    
+    return players;
+  }
+
+  isCurrentPlayer(playerId: string): boolean {
+    return this.socketService.currentUser() === playerId;
   }
 }

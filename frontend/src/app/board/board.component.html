@@ -1,18 +1,64 @@
-<div class="board-container">
-  <div class="board-wrap">
-    <canvas #canvas width="600" height="600"></canvas>
-    <div class="start-pieces">
-      <img src="/red.png" alt="Red" />
-      <img src="/blue.png" alt="Blue" />
-      <img src="/green.png" alt="Green" />
-      <img src="/yellow.png" alt="Yellow" />
+<!-- board.component.html -->
+<div class="board-wrapper">
+  <div class="game-header">
+    
+    <div class="room-info">
+      <span class="room-id">Room: {{ socketService.getCurrentRoomId() }}</span>
+      <span class="player-count">Players: {{ socketService.getPlayers().length }}/4</span>
     </div>
   </div>
-  <div class="right-pane">
-    <div class="spacer"></div>
-    <div class="dice-comp">
-      <app-dice></app-dice>
+
+  <div class="board-container">
+    <!-- Game Board -->
+    <div class="canvas-wrapper">
+      <canvas #canvas width="600" height="600"></canvas>
+      <div class="board-legend">
+        <div class="legend-item">
+          <span class="legend-icon snake">🐍</span>
+          <span class="legend-text">Snakes slide down</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-icon ladder">🪜</span>
+          <span class="legend-text">Ladders climb up</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dice Section -->
+    <div class="dice-section">
+      <div class="dice-comp">
+        <app-dice></app-dice>
+      </div>
+      
+      <div class="game-info">
+        <h3>Game Status</h3>
+        <div class="status-item">
+          <span class="label">Dice Value:</span>
+          <span class="value">{{ socketService.diceValue() || '-' }}</span>
+        </div>
+        <div class="status-item">
+          <span class="label">Current Turn:</span>
+          <span class="value">{{ getCurrentPlayerName() }}</span>
+        </div>
+      </div>
+
+      <div class="players-list">
+        <h3>Players</h3>
+        <div class="player-item" *ngFor="let player of getPlayersList()">
+          <span 
+            class="player-color" 
+            [style.background-color]="player.color">
+          </span>
+          <span class="player-name">{{ player.name }}</span>
+          <span class="player-position">Pos: {{ player.currentPosition }}</span>
+          <span 
+            class="player-status"
+            [class.active]="player.isActive"
+            [class.current]="isCurrentPlayer(player.id)">
+            {{ isCurrentPlayer(player.id) ? '▶' : '' }}
+          </span>
+        </div>
+      </div>
     </div>
   </div>
 </div>
-
