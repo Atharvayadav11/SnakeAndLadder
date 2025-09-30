@@ -62,7 +62,6 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   };
 
-
   ngOnInit() {
     this.boardImage.src = 'image.png';
     this.socketService.onMove((playerId: string, val: number) => {
@@ -107,23 +106,20 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // Cleanup if needed
+
   }
 
   private redrawBoard() {
     const canvas = this.canvasRef.nativeElement;
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw background
+
     this.ctx.fillStyle = '#f5f5dc';
     this.ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw board image if loaded
+
     if (this.boardImage.complete && this.boardImage.naturalHeight !== 0) {
       this.ctx.drawImage(this.boardImage, 0, 0, 600, 600);
     }
 
-    // Draw all users
     const usersIterator = this.socketService.getUsers();
     if (!usersIterator) {
       console.warn('No users found');
@@ -132,12 +128,15 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
 
     let playerIndex = 0;
     for (const [playerId, user] of usersIterator) {
+      // Skip the player that is currently animating
+      if (playerId === this.animatingPlayerId) {
+        playerIndex++;
+        continue;
+      }
       if (user.currentPosition === 0) {
-        // Draw player outside the board
         const startPos = this.STARTING_POSITIONS[playerIndex % 4];
         this.drawBall(startPos.x, startPos.y, user.color, playerId);
       } else {
-        // Draw player on the board
         const { x, y } = this.getCoords(user.currentPosition);
         this.drawBall(x, y, user.color, playerId);
       }
@@ -250,7 +249,7 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     let progress = 0;
-    const duration = 10;
+    const duration = 30;
 
     const animate = () => {
       progress++;
@@ -307,7 +306,6 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     doNextHop();
-    this.animatingPlayerId = null;
   }
 
   private checkSnakesAndLadders(playerId: string, position: number) {
@@ -331,6 +329,9 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
     // Check for ladder
     if (this.LADDERS[position]) {
       const ladderEnd = this.LADDERS[position];
+      // Take user i/p here.
+      // If yes then skip the next part and update the user object and emit a event to backend.
+      // If no then continue as it is
       console.log(`Ladder! Player ${playerId} climbs from ${position} to ${ladderEnd}`);
 
       setTimeout(() => {
@@ -346,6 +347,7 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.animating = false;
+    this.animatingPlayerId = null;
   }
 
   private slideToPosition(playerId: string, from: number, to: number) {
@@ -381,6 +383,7 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     animate();
+    this.animatingPlayerId = null;
   }
 
   private showWinner(playerId: string) {

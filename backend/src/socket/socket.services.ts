@@ -199,15 +199,13 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
         state?.currentUserToPlay != queue![0];
       }
 
-      GameState.set(roomId, state!);
-      io.to(roomId).emit("diceRolled", { playerId, val, GameData: serializeGameState(GameState.get(roomId)!) });
-
-      // Move Player
       const room = GameState.get(roomId);
       console.log("dice" + room)
       const player = room!.Users.get(playerId);
+  
+      GameState.set(roomId, state!);
+      io.to(roomId).emit("diceRolled", { playerId, val, GameData: serializeGameState(GameState.get(roomId)!) });
 
-      // Start of Game
       if (player?.currentPosition === 0 && val != 6)
         return;
 
