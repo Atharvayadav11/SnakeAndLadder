@@ -25,42 +25,55 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
   socketService = inject(SocketService);
 
   animating = false;
+  private animatingPlayerId: string | null = null;
+
   private readonly STARTING_POSITIONS = [
-    { x: 650, y: 100 },  
-    { x: 650, y: 200 },  
-    { x: 650, y: 300 },   
-    { x: 650, y: 400 }    
+    { x: 650, y: 100 },
+    { x: 650, y: 200 },
+    { x: 650, y: 300 },
+    { x: 650, y: 400 }
   ];
 
   private readonly LADDERS: { [key: number]: number } = {
-  5: 58,
-  42: 60,
-  14: 49,
-  53: 72,
-  64: 83,
-  75: 94
-};
+    5: 58,
+    42: 60,
+    14: 49,
+    53: 72,
+    64: 83,
+    75: 94
+  };
 
-private readonly SNAKES: { [key: number]: number } = {
-  38: 20,
-  45: 7,
-  51: 10,
-  65: 54,
-  97: 61,
-  91: 73
-};
+  private readonly SNAKES: { [key: number]: number } = {
+    38: 20,
+    45: 7,
+    51: 10,
+    65: 54,
+    97: 61,
+    91: 73
+  };
+
+  private playerImages: { [color: string]: HTMLImageElement } = {};
+
+  constructor() {
+    ['red', 'blue', 'green'].forEach(color => {
+      const img = new Image();
+      img.src = `/${color}.png`;
+      this.playerImages[color] = img;
+    });
+  };
+
 
   ngOnInit() {
     this.boardImage.src = 'image.png';
     this.socketService.onMove((playerId: string, val: number) => {
       console.log(`Player ${playerId} rolled ${val}`);
-      
+
       const user = this.socketService.getUser(playerId);
       if (!user) {
         console.error(`User ${playerId} not found`);
         return;
       }
-      
+
       if (user.currentPosition === 0 && val === 6) {
         console.log(`Player ${playerId} enters the board!`);
         this.enterBoard(playerId);
@@ -70,12 +83,9 @@ private readonly SNAKES: { [key: number]: number } = {
         this.hopToCell(playerId, targetPosition);
       } else {
         console.log(`Player ${playerId} stays outside (rolled ${val}, needs 6 to enter)`);
-        // Player stays outside, just redraw
         this.redrawBoard();
       }
     });
-
-    // Listen for game started event to initialize board
     this.socketService.onGameStarted().subscribe((data) => {
       console.log('Game started!', data);
       setTimeout(() => this.redrawBoard(), 100);
@@ -90,8 +100,6 @@ private readonly SNAKES: { [key: number]: number } = {
       console.log('Board image loaded');
       this.redrawBoard();
     };
-
-    // Fallback: if image doesn't load, still draw the board
     this.boardImage.onerror = () => {
       console.warn('Board image failed to load, drawing without background');
       this.redrawBoard();
@@ -138,26 +146,21 @@ private readonly SNAKES: { [key: number]: number } = {
   }
 
   private drawBall(x: number, y: number, color: string, playerId: string) {
-    this.ctx.beginPath();
-    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-    this.ctx.arc(x + 2, y + 2, 12, 0, Math.PI * 2);
-    this.ctx.fill();
+    const img = this.playerImages[color];
 
-    this.ctx.beginPath();
-    this.ctx.fillStyle = '#ffffff';
-    this.ctx.arc(x, y, 12, 0, Math.PI * 2);
-    this.ctx.fill();
-
-    this.ctx.beginPath();
-    this.ctx.fillStyle = color;
-    this.ctx.arc(x, y, 10, 0, Math.PI * 2);
-    this.ctx.fill();
+    if (img && img.complete) {
+      this.ctx.drawImage(img, x - 12, y - 12, 24, 24);
+    } else {
+      this.ctx.beginPath();
+      this.ctx.fillStyle = color;
+      this.ctx.arc(x, y, 10, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
 
     this.ctx.fillStyle = "white";
     this.ctx.font = "bold 10px Arial";
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
-    this.ctx.fillText(playerId[0].toUpperCase(), x, y);
   }
 
   private getCoords(cell: number) {
@@ -183,8 +186,9 @@ private readonly SNAKES: { [key: number]: number } = {
       setTimeout(() => this.enterBoard(playerId), 100);
       return;
     }
-    
+
     this.animating = true;
+    this.animatingPlayerId = playerId;
 
     // Get player's starting position outside board
     let playerIndex = 0;
@@ -194,7 +198,7 @@ private readonly SNAKES: { [key: number]: number } = {
     }
 
     const startPos = this.STARTING_POSITIONS[playerIndex % 4];
-    const endPos = this.getCoords(1); 
+    const endPos = this.getCoords(1);
     const user = this.socketService.getUser(playerId);
 
     if (!user) {
@@ -231,6 +235,7 @@ private readonly SNAKES: { [key: number]: number } = {
 
     animate();
     this.hopToCell(playerId, 6);
+    this.animatingPlayerId = null;
   }
 
   private hopOneStep(playerId: string, startCell: number, nextCell: number, callback: () => void) {
@@ -245,7 +250,7 @@ private readonly SNAKES: { [key: number]: number } = {
     }
 
     let progress = 0;
-    const duration = 30;
+    const duration = 10;
 
     const animate = () => {
       progress++;
@@ -275,8 +280,9 @@ private readonly SNAKES: { [key: number]: number } = {
       setTimeout(() => this.hopToCell(playerId, targetCell), 100);
       return;
     }
-    
+
     this.animating = true;
+    this.animatingPlayerId = playerId;
 
     const user = this.socketService.getUser(playerId);
     if (!user) {
@@ -289,7 +295,6 @@ private readonly SNAKES: { [key: number]: number } = {
 
     const doNextHop = () => {
       if (step >= targetCell) {
-        // Check for snakes and ladders
         this.checkSnakesAndLadders(playerId, targetCell);
         return;
       }
@@ -302,6 +307,7 @@ private readonly SNAKES: { [key: number]: number } = {
     };
 
     doNextHop();
+    this.animatingPlayerId = null;
   }
 
   private checkSnakesAndLadders(playerId: string, position: number) {
@@ -315,7 +321,7 @@ private readonly SNAKES: { [key: number]: number } = {
     if (this.SNAKES[position]) {
       const snakeEnd = this.SNAKES[position];
       console.log(`Snake! Player ${playerId} goes from ${position} to ${snakeEnd}`);
-      
+
       setTimeout(() => {
         this.slideToPosition(playerId, position, snakeEnd);
       }, 500);
@@ -326,7 +332,7 @@ private readonly SNAKES: { [key: number]: number } = {
     if (this.LADDERS[position]) {
       const ladderEnd = this.LADDERS[position];
       console.log(`Ladder! Player ${playerId} climbs from ${position} to ${ladderEnd}`);
-      
+
       setTimeout(() => {
         this.slideToPosition(playerId, position, ladderEnd);
       }, 500);
@@ -353,7 +359,7 @@ private readonly SNAKES: { [key: number]: number } = {
     }
 
     let progress = 0;
-    const duration = 60;
+    const duration = 30;
 
     const animate = () => {
       progress++;
@@ -394,14 +400,14 @@ private readonly SNAKES: { [key: number]: number } = {
   getCurrentPlayerName(): string {
     const currentPlayerId = this.socketService.currentUser();
     if (!currentPlayerId) return 'Waiting...';
-    
+
     const user = this.socketService.getUser(currentPlayerId);
     return user?.name || currentPlayerId;
   }
 
   getPlayersList(): Array<{ id: string; name: string; color: string; currentPosition: number; isActive: boolean }> {
     const players: Array<{ id: string; name: string; color: string; currentPosition: number; isActive: boolean }> = [];
-    
+
     for (const [playerId, user] of this.socketService.getUsers()) {
       players.push({
         id: playerId,
@@ -411,7 +417,7 @@ private readonly SNAKES: { [key: number]: number } = {
         isActive: user.isActive
       });
     }
-    
+
     return players;
   }
 
