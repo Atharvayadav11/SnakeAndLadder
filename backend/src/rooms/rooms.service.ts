@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { GameService } from "src/game/game.service";
 import { UserModel } from '../models/user';
 import { GameStateModel } from "../models/gameState";
+import { Room } from "./rooms.model";
 
 @Injectable()
 export class RoomsService {
@@ -15,7 +16,7 @@ getRoomById(id: string):any {
         const gameState = this.gameService.getGameState(id);
     }
 
-    createRoom(playerName: string, customId?: string, userId?: string): GameStateModel {
+createRoom(playerName: string, customId?: string, userId?: string): GameStateModel {
         const roomId = (customId && customId.trim().length > 0) ? customId.trim() : uuidv4();
 if(this.gameService.getGameState(roomId)){
     throw new Error('Room with this ID already exists');
@@ -44,7 +45,7 @@ if(this.gameService.getGameState(roomId)){
         return newRoom;
     }
 
-    joinRoom(roomId: string, playerName: string,userId:string): GameStateModel | null {
+joinRoom(roomId: string, playerName: string,userId:string): GameStateModel | null {
         const room = this.gameService.getGameState(roomId);
         if (!room) return null;
         if (room.Users.size >= room.maxUsers) {
@@ -77,6 +78,20 @@ selectColor(roomId: any, playerId: any, color: any) {
         user.color = color;
         room.availableColors = room.availableColors.filter(c => c !== color);
         room.Users.set(playerId, user);
+        this.gameService['gameState'].set(roomId, room);
+        return room;
+    }
+
+handleUserDisconnect(roomId: string, playerId: string): GameStateModel | null {
+        const room = this.gameService.getGameState(roomId);
+        if (!room) return null;
+        const user = room.Users.get(playerId);
+        if (user) {
+            user.isActive = false;
+            room.Users.set(playerId, user);
+            room.availableColors.push(user.color);
+            user.color = '';
+        }
         this.gameService['gameState'].set(roomId, room);
         return room;
     }
