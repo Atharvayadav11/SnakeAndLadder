@@ -31,10 +31,6 @@ export class GameGateway implements OnGatewayConnection {
     const val = this.gameService.onRollDice(data.playerId, data.roomId);
     this.socket.to(data.roomId).emit('diceRolled', {playerId: data.playerId, val}); 
   }
-
-
-
-
-
   
 }
+

@@ -1,4 +1,9 @@
+import { UserModel } from '../models/user';
+
 export interface Room {
-    id: string;
-    players: string[];
+   users: [];
+   roomId: string;
+   maxPlayers: number;
+   isGameStarted: boolean;
+   admin: string;
 }

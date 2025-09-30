@@ -56,10 +56,10 @@
 
 canvas {
   border-radius: 16px;
-  box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
-  background: white;
+  // box-shadow: 
+  //   0 20px 60px rgba(0, 0, 0, 0.3),
+  //   0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: transparent;
   display: block;
 }
 
@@ -75,6 +75,8 @@ canvas {
   border: 2px solid rgba(255, 255, 255, 0.8);
 
 }
+
+
 
 .legend-item {
   display: flex;
