@@ -8,4 +8,4 @@ export interface GameState{
     isGameFinished:boolean;
     maxUsers:number;
     usersInQueue:string[];
-  }
+}

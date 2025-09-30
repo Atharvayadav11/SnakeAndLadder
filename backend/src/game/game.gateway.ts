@@ -1,21 +1,36 @@
-import { Socket } from "socket.io";
-import { UserModel } from "../models/user.js";
-import type { GameStateModel } from "../models/gameState.js";
-import { Server } from "socket.io";
-import { WebSocketServer,WebSocketGateway ,OnGatewayConnection,OnGatewayInit,OnGatewayDisconnect} from "@nestjs/websockets";
-import { GameService } from "./game.service.js";
+import { WebSocketGateway, OnGatewayConnection, WebSocketServer, SubscribeMessage, MessageBody } from '@nestjs/websockets';
+import { Socket } from 'socket.io';
+import { GameService } from './game.service';
 
-@WebSocketGateway({
-    cors:{
-        origin:'*'
+@WebSocketGateway({cors: true})
+export class GameGateway implements OnGatewayConnection {
+  @WebSocketServer()
+  socket: Socket;
+
+  constructor(private gameService: GameService){}
+  handleConnection(client: Socket) {
+    console.log('Player connected:', client.id);
+  }
+
+  handleDisconnect(client: Socket) {
+    console.log('Player disconnected:', client.id);
+  }
+
+  @SubscribeMessage('startGame')
+  handleGameStart(@MessageBody() data: {playerId: string, roomId: string}, client: Socket){
+    try {
+        const val = this.gameService.onStartGame(data.playerId, data.roomId);
+        this.socket.to(data.roomId).emit('gameStarted', {playerId: data.playerId, roomId: data.roomId});
+    } catch (error) {
+        client.emit('gameStartError',{message: error.message});
     }
-})
-export class GameGateway {
-   @WebSocketServer()
-   Server:Server;
+  }
 
-   constructor(private readonly gameService:GameService){}
-
-   
+  @SubscribeMessage('rollDice')
+  handleDiceRoll(@MessageBody() data: {playerId: string, roomId: string}){
+    const val = this.gameService.onRollDice(data.playerId, data.roomId);
+    this.socket.to(data.roomId).emit('diceRolled', {playerId: data.playerId, val}); 
+  }
+  
 }
 

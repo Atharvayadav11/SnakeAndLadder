@@ -261,9 +261,18 @@ import { Server, Socket } from "socket.io";
     console.log('Client disconnected:', client.id);
   }
 
+  const GameState = new Map<string, GameState>();
+  const ladderVals: [number, number][] = [[5, 58], [42, 60], [14, 49], [53, 72], [64, 83], [75, 94]];
+  const snakeVals: [number, number][] = [[38, 20], [45, 7], [51, 10], [65, 54], [97, 61], [91, 73]];
+
+  const ladder = new Map<number, number>(ladderVals);
+  const snakes = new Map<number, number>(snakeVals);
+
+
   setServer(server:Server){
     this.server=server;
   }    
+
 
 
   emitToAll(event:string, data:any){
