@@ -6,33 +6,33 @@ import { GameModel } from "src/game/game.model";
 
 
 export async function setupSocket(app: any, roomsService: RoomsService, gameService: GameService) {
-  interface User{
-    name:string,
-    color:string
-    currentPosition:number,
-    isAnAdmin:boolean,
-    isActive:boolean
+  interface User {
+    name: string,
+    color: string
+    currentPosition: number,
+    isAnAdmin: boolean,
+    isActive: boolean
   }
 
-  interface GameState{
-    Users: Map<string,User>;
-    winner:string;
-    currentUserToPlay:string;
-    isGameStarted:boolean;
-    isGameFinished:boolean;
-    maxUsers:number;
-    usersInQueue:string[];
+  interface GameState {
+    Users: Map<string, User>;
+    winner: string;
+    currentUserToPlay: string;
+    isGameStarted: boolean;
+    isGameFinished: boolean;
+    maxUsers: number;
+    usersInQueue: string[];
   }
 
-  const ladderVals : [number, number][] = [[5,58], [42,60], [14,49], [53,72], [64,83], [75,94]];
-  const snakeVals: [number, number][]  = [[38,20], [45,7], [51,10], [65,54], [97,61], [91,73]];
+  const ladderVals: [number, number][] = [[5, 58], [42, 60], [14, 49], [53, 72], [64, 83], [75, 94]];
+  const snakeVals: [number, number][] = [[38, 20], [45, 7], [51, 10], [65, 54], [97, 61], [91, 73]];
 
-  const GameState= new Map<string, GameState>();
+  const GameState = new Map<string, GameState>();
   const ladder = new Map<number, number>(ladderVals);
   const snakes = new Map<number, number>(snakeVals);
 
 
-  const colors=['red','blue','green','yellow'];
+  const colors = ['red', 'blue', 'green', 'yellow'];
   const httpServer = createServer(app);
   const io = new Server(httpServer, {
     cors: {
@@ -43,11 +43,11 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
   });
 
   function serializeGameState(gameState: GameState) {
-  return {
-    ...gameState,
-    Users: Object.fromEntries(gameState.Users), // Map → plain object
-  };
-}
+    return {
+      ...gameState,
+      Users: Object.fromEntries(gameState.Users), // Map → plain object
+    };
+  }
 
   io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
@@ -56,34 +56,34 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
       console.log('Creating room for player:', data.playerName);
       try {
         const room = roomsService.createRoom(data.playerName, data.roomId);
-      socket.join(room.id);
-      const User:User={
-        name: data.playerName,
-        color: '',
-        currentPosition: 0,
-        isAnAdmin: true,
-        isActive: true
-      }
-      GameState.set(room.id, {
-        Users: new Map<string,User>([[socket.id, User]]),
-        winner: '',
-        currentUserToPlay: '',
-        isGameStarted: false,
-        isGameFinished: false,
-        usersInQueue: [socket.id],
-        maxUsers: 4
-      });
+        socket.join(room.id);
+        const User: User = {
+          name: data.playerName,
+          color: '',
+          currentPosition: 0,
+          isAnAdmin: true,
+          isActive: true
+        }
+        GameState.set(room.id, {
+          Users: new Map<string, User>([[socket.id, User]]),
+          winner: '',
+          currentUserToPlay: socket.id,
+          isGameStarted: false,
+          isGameFinished: false,
+          usersInQueue: [socket.id],
+          maxUsers: 4
+        });
 
-      const obj = Object.fromEntries(GameState.get(room.id)?.Users ?? []);
-      console.log("Om", obj);
+        const obj = Object.fromEntries(GameState.get(room.id)?.Users ?? []);
+        console.log("Om", obj);
 
-      socket.emit('roomCreated', { roomId: room.id, room: room, gameState: obj, isAdmin: true, isGameStarted: false });
-      // send available colors to creator
-      socket.emit('availableColors', { roomId: room.id, colors });
-      console.log('Room created:', room.id);
+        socket.emit('roomCreated', { roomId: room.id, room: room, gameState: obj, isAdmin: true, isGameStarted: false });
+        // send available colors to creator
+        socket.emit('availableColors', { roomId: room.id, colors });
+        console.log('Room created:', room.id);
 
-      console.log('GameState:', GameState);
-      console.log(GameState.get(room.id)?.Users)
+        console.log('GameState:', GameState);
+        console.log(GameState.get(room.id)?.Users)
       } catch (e: any) {
         socket.emit('error', { message: e?.message || 'Failed to create room' });
       }
@@ -92,16 +92,16 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
     socket.on('joinRoom', (data) => {
       const { roomId, playerName } = data;
       console.log('Player', playerName, 'trying to join room:', roomId);
-      if(!GameState.has(roomId)){
+      if (!GameState.has(roomId)) {
         socket.emit('gameState', { gameState: GameState.get(roomId) });
         socket.emit('error', { message: 'Room does not exist' });
         console.log('Room not found:', roomId);
-       
-        return;       
+
+        return;
       }
 
-      if(GameState.get(roomId)?.maxUsers === GameState.get(roomId)?.usersInQueue.length){
-       
+      if (GameState.get(roomId)?.maxUsers === GameState.get(roomId)?.usersInQueue.length) {
+
         socket.emit('error', { message: 'Room is full' });
         console.log('Room is full:', roomId);
         return;
@@ -116,10 +116,11 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
 
       const obj = Object.fromEntries(GameState.get(room.id)?.Users ?? []);
       console.log("Om", obj);
+      const currUser = GameState.get(roomId)?.usersInQueue[0];
       socket.join(roomId);
-      socket.emit('joinedRoom', { roomId: roomId, room: room, gameState: obj, isAdmin: false, isGameStarted: GameState.get(roomId)?.isGameStarted || false });
+      socket.emit('joinedRoom', { roomId: roomId, room: room, currentUser: currUser, joinedUser: socket.id, gameState: obj, isAdmin: false, isGameStarted: GameState.get(roomId)?.isGameStarted || false });
 
-      const User:User={
+      const User: User = {
         name: playerName,
         color: '',
         currentPosition: 0,
@@ -147,7 +148,7 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
       socket.emit('availableColors', { roomId, colors: available });
       io.to(roomId).emit('playerJoined', { playerName: playerName, players: room.players });
       console.log('Player joined room:', roomId, 'Players:', room.players);
-     
+
       console.log('GameState:', GameState);
       console.log(GameState.get(roomId)?.Users)
     });
@@ -184,33 +185,42 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
       io.to(roomId).emit('availableColors', { roomId, colors: available });
     });
 
-    socket.on('rollDice',(data: GameModel) => {
-      const {playerId, roomId} = data;
+    socket.on('rollDice', (data: GameModel) => {
+      const { playerId, roomId } = data;
 
-      let val =  Math.floor(Math.random()*6) + 1;
-  
-      io.to(roomId).emit("diceRolled", {playerId,val, GameData: serializeGameState(GameState.get(roomId)!)});
+      let val = Math.floor(Math.random() * 6) + 1;
+      let state = GameState.get(roomId);
+
+      if (val != 6) {
+        let queue = state?.usersInQueue;
+        let first = queue?.shift();
+        queue?.push(first || "");
+        state?.usersInQueue != queue;
+        state?.currentUserToPlay != queue![0];
+      }
+
+      GameState.set(roomId, state!);
+      io.to(roomId).emit("diceRolled", { playerId, val, GameData: serializeGameState(GameState.get(roomId)!) });
 
       // Move Player
-      
       const room = GameState.get(roomId);
-      console.log("dice"+room)
+      console.log("dice" + room)
       const player = room!.Users.get(playerId);
-      
+
       // Start of Game
-      if(player?.currentPosition === 0 && val != 6)
+      if (player?.currentPosition === 0 && val != 6)
         return;
-    
+
       let nextPos = player!.currentPosition + val;
-      if(ladder.has(nextPos)){
+      if (ladder.has(nextPos)) {
         nextPos = ladder.get(nextPos)!;
       }
-      else if(snakes.has(nextPos)){
+      else if (snakes.has(nextPos)) {
         nextPos = snakes.get(nextPos)!;
       }
 
       player!.currentPosition = nextPos;
-      room!.Users.set(playerId,player!);
+      room!.Users.set(playerId, player!);
       GameState.set(roomId, room!);
     });
 
@@ -230,9 +240,9 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
     socket.on('userDisconnected', (data) => {
       const { roomId } = data;
       console.log('Client disconnected:', socket.id);
-      const gameState=GameState.get(roomId);
-      if(gameState){
-        gameState.usersInQueue=gameState.usersInQueue.filter(id=>id!==socket.id);
+      const gameState = GameState.get(roomId);
+      if (gameState) {
+        gameState.usersInQueue = gameState.usersInQueue.filter(id => id !== socket.id);
         const usersMap = new Map<string, User>(gameState.Users || []);
         usersMap.delete(socket.id);
         GameState.set(roomId, { ...gameState, Users: usersMap });
@@ -240,7 +250,7 @@ export async function setupSocket(app: any, roomsService: RoomsService, gameServ
         const available = colors.filter(c => !takenColors.includes(c));
         io.to(roomId).emit('availableColors', { roomId, colors: available });
       }
-console.log('GameState:', GameState);
+      console.log('GameState:', GameState);
     });
   });
 

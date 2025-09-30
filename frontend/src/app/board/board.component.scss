@@ -1,0 +1,258 @@
+
+:host {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+  background-image: url('/helio-03.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.board-wrapper {
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.game-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 2rem;
+}
+
+.game-header h1 {
+  font-size: 3rem;
+  margin: 0 0 1rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.room-info {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  font-size: 1.1rem;
+}
+
+.room-id, .player-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.board-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 3rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.canvas-wrapper {
+  position: relative;
+}
+
+canvas {
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: white;
+  display: block;
+}
+
+.board-legend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend-icon {
+  font-size: 1.5rem;
+}
+
+.legend-text {
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.dice-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  min-width: 280px;
+}
+
+.dice-comp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.2),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.game-info, .players-list {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.game-info h3, .players-list h3 {
+  margin: 0 0 1rem;
+  color: #333;
+  font-size: 1.3rem;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 0.5rem;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.status-item:last-child {
+  border-bottom: none;
+}
+
+.status-item .label {
+  color: #666;
+  font-weight: 500;
+}
+
+.status-item .value {
+  color: #333;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.player-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.player-item:hover {
+  background: #e9ecef;
+  transform: translateX(5px);
+}
+
+.player-color {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.player-name {
+  flex: 1;
+  font-weight: 600;
+  color: #333;
+}
+
+.player-position {
+  font-size: 0.85rem;
+  color: #666;
+  background: #dee2e6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+}
+
+.player-status {
+  font-size: 1.2rem;
+  width: 20px;
+  text-align: center;
+}
+
+.player-status.current {
+  color: #28a745;
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+// Responsive Design
+@media (max-width: 1200px) {
+  .board-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .dice-section {
+    width: 100%;
+    max-width: 600px;
+  }
+}
+
+@media (max-width: 768px) {
+  .board-wrapper {
+    padding: 1rem;
+  }
+
+  .game-header h1 {
+    font-size: 2rem;
+  }
+
+  .room-info {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .board-container {
+    gap: 1.5rem;
+  }
+
+  .dice-section {
+    min-width: unset;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .board-legend {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .dice-comp {
+    padding: 1rem;
+  }
+}
