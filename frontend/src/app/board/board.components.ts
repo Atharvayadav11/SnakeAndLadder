@@ -28,10 +28,10 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
   private animatingPlayerId: string | null = null;
 
   private readonly STARTING_POSITIONS = [
-    { x: 650, y: 100 },
-    { x: 650, y: 200 },
-    { x: 650, y: 300 },
-    { x: 650, y: 400 }
+    { x: 50, y: 550 },
+    { x: 100, y: 550 },
+    { x: 50, y: 500 },
+    { x: 100, y: 500 }
   ];
 
   private readonly LADDERS: { [key: number]: number } = {
@@ -55,7 +55,7 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
   private playerImages: { [color: string]: HTMLImageElement } = {};
 
   constructor() {
-    ['red', 'blue', 'green'].forEach(color => {
+    ['red','blue','yellow','green'].forEach(color => {
       const img = new Image();
       img.src = `/${color}.png`;
       this.playerImages[color] = img;
@@ -115,12 +115,13 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     // Draw background
-    this.ctx.fillStyle = '#f5f5dc';
-    this.ctx.fillRect(0, 0, canvas.width, canvas.height);
+    this.ctx.fillStyle = 'transparent';
+    
+    this.ctx.fillRect(150, 0, canvas.width, canvas.height);
     
     // Draw board image if loaded
     if (this.boardImage.complete && this.boardImage.naturalHeight !== 0) {
-      this.ctx.drawImage(this.boardImage, 0, 0, 600, 600);
+      this.ctx.drawImage(this.boardImage, 150, 0, 600, 600);
     }
 
     // Draw all users
@@ -129,6 +130,7 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
       console.warn('No users found');
       return;
     }
+    
 
     let playerIndex = 0;
     for (const [playerId, user] of usersIterator) {
@@ -144,6 +146,7 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
       playerIndex++;
     }
   }
+
 
   private drawBall(x: number, y: number, color: string, playerId: string) {
     const img = this.playerImages[color];
@@ -172,7 +175,7 @@ export class BoardComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Snake and ladder board pattern (zigzag)
     if (row % 2 === 0) {
-      x = col * 60 + 30;
+      x = 150+col * 60 + 30;
     } else {
       x = 600 - col * 60 - 30;
     }
