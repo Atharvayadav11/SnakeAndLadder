@@ -4,7 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { GameService } from "src/game/game.service";
 import { UserModel } from '../models/user';
 import { GameStateModel } from "../models/gameState";
-import { Room } from "./rooms.model";
 
 @Injectable()
 export class RoomsService {
@@ -12,11 +11,15 @@ export class RoomsService {
 
     constructor(private gameService:GameService){}
 
-getRoomById(id: string):any {
+getRoomById(id: string): GameStateModel {
         const gameState = this.gameService.getGameState(id);
+        if (!gameState) {
+            throw new Error('Room not found');
+        }
+        return gameState;
     }
 
-createRoom(playerName: string, customId?: string, userId?: string): GameStateModel {
+createRoom(playerName: string, customId?: string, userId?: string) {
         const roomId = (customId && customId.trim().length > 0) ? customId.trim() : uuidv4();
 if(this.gameService.getGameState(roomId)){
     throw new Error('Room with this ID already exists');
@@ -45,7 +48,7 @@ if(this.gameService.getGameState(roomId)){
         return newRoom;
     }
 
-joinRoom(roomId: string, playerName: string,userId:string): GameStateModel | null {
+joinRoom(roomId: string, playerName: string,userId:string) {
         const room = this.gameService.getGameState(roomId);
         if (!room) return null;
         if (room.Users.size >= room.maxUsers) {
@@ -63,7 +66,9 @@ joinRoom(roomId: string, playerName: string,userId:string): GameStateModel | nul
         return room;
     }
 
-selectColor(roomId: any, playerId: any, color: any): GameStateModel | null {   
+
+selectColor(roomId: string, playerId: string, color: string) {
+
         const room = this.gameService.getGameState(roomId);
         if (!room) {
             throw new Error('Room not found');
