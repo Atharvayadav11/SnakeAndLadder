@@ -8,7 +8,6 @@ import { MatSnackBar } from "@angular/material/snack-bar";
 
 @Injectable({providedIn:'root'})
 export class HomeService {
-
     private socketService:SocketService;
     private boardService:BoardService;
     private snackBar = inject(MatSnackBar);

@@ -1,4 +1,4 @@
-export   interface UserModel {
+export interface UserModel {
     name: string,
     color: string
     currentPosition: number,

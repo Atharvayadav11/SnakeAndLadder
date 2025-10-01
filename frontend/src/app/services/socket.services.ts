@@ -1,11 +1,11 @@
-import { inject, Injectable, signal } from '@angular/core';
-
+import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { UserModel } from '../user.model';
 import { UserService } from './users.service';
 import { GameState } from '../game.model';
 import { Observable } from 'rxjs';
 import { HomeService } from '../home/home.services';
+
 
 @Injectable({ providedIn: 'root' })
 export class SocketService {
@@ -21,9 +21,11 @@ export class SocketService {
       console.log('Disconnected from socket server');
     });
   }
+
   getSocket(): Socket {
-    return this.socket;
+      return this.socket;
   }
+
 
   emit(event: string, data?: any) {
     console.log(`Emitting ${event}:`, data);
@@ -33,32 +35,24 @@ export class SocketService {
   on<T>(event: string): Observable<T> {
     return new Observable(observer => {
       this.socket.on(event, (data: T) => {
+        console.log(`Event ${event} received:`, data);
         observer.next(data);
       });
     });
   }
 
 
-  localUser = signal("");
-  roomId = signal("");
+}
 
-  setLocalUser(userId: string){
-    this.localUser.set(userId);
-  }
 
-  setRoomId(roomId: string){
-    this.roomId.set(roomId);
-  }
 
   // onRoomCreated(): Observable<any> {
   //   return this.on('roomCreated');
   // }
 
-  onRoomJoined(): Observable<any> {
-    return this.on('roomJoined');
-  }
- 
-}
+  //onRoomJoined(): Observable<any> {
+   // return this.on('roomJoined');
+  //}
 
 // @Injectable({ providedIn: 'root' })
 // export class SocketService {

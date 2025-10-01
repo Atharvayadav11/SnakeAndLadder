@@ -6,6 +6,9 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  // // Get the RoomsService instance
+  // const roomsService = app.get(RoomsService);
+  // const gameService = app.get(GameService);
   
   // Enable CORS for the REST API
   app.enableCors({
