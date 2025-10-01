@@ -1,9 +1,6 @@
-import { inject, Injectable, signal } from '@angular/core';
-
+import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
-import { UserModel } from '../user.model';
-import { UserService } from './users.service';
-import { GameState } from '../game.model';
+import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class SocketService {
@@ -19,13 +16,23 @@ export class SocketService {
       console.log('Disconnected from socket server');
     });
   }
-getSocket(): Socket {
-    return this.socket;
+
+  getSocket(): Socket {
+      return this.socket;
   }
 
   emit(event: string, data?: any) {
     console.log(`Emitting ${event}:`, data);
     this.socket.emit(event, data);
+  }
+
+  on<T>(event: string): Observable<T> {
+    return new Observable(observer => {
+      this.socket.on(event, (data: T) => {
+        console.log(`Event ${event} received:`, data);
+        observer.next(data);
+      });
+    });
   }
 
 }

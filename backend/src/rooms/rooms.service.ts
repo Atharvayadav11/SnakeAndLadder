@@ -101,19 +101,4 @@ handleUserDisconnect(roomId: string, playerId: string): GameStateModel | null {
         return room;
     }
 
-
-handleUserDisconnect(roomId: string, playerId: string): GameStateModel | null {
-        const room = this.gameService.getGameState(roomId);
-        if (!room) return null;
-        const user = room.Users.get(playerId);
-        if (user) {
-            user.isActive = false;
-            room.Users.set(playerId, user);
-            room.availableColors.push(user.color);
-            user.color = '';
-        }
-        this.gameService['gameState'].set(roomId, room);
-        return room;
-    }
-
 }

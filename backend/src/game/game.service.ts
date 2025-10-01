@@ -34,7 +34,6 @@ export class GameService {
       return val;
    }
 
-
    movePlayer(playerId: string, roomId: string, val: number) {
       let state = this.gameState.get(roomId);
       if (!state) {
@@ -88,7 +87,4 @@ export class GameService {
       const [first, ...rest] = queue;
       return [...rest, first];
    }
-
-
-
 }

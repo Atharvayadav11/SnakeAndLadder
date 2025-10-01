@@ -1,7 +1,8 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, computed, signal, Signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SocketService } from '../services/socket.services';
-import { UserService } from '../services/users.service';
+import { DiceService } from './dice.service';
+import { HomeService } from '../home/home.services';
+import { BoardService } from '../board/board.services';
 
 @Component({
   selector: 'app-dice',
@@ -11,16 +12,19 @@ import { UserService } from '../services/users.service';
   styleUrls: ['./dice.component.scss']
 })
 export class DiceComponent {
-  private socketService = inject(SocketService);
-  private userService = inject(UserService);
+  diceValue: Signal<number>;
+  currentPlayer = signal(" ");
 
-  diceValue = this.socketService.diceValue;
-  currentPlayer = this.socketService.currentUser;
+  constructor(private userService: HomeService, private boardService: BoardService, private diceService: DiceService){
+    this.diceValue = this.diceService.diceValue;
+    this.currentPlayer.set(this.boardService.getCurrentUser());
+  }
+
   isRolling = computed(() => false);
 
   canRoll = computed(() => {
     const localUser = this.userService.localUser();
-    const currentUser = this.currentPlayer();
+    const currentUser = this.boardService.getCurrentUser();
     return localUser && currentUser && localUser === currentUser;
   });
 
@@ -36,10 +40,10 @@ export class DiceComponent {
   });
 
   currentPlayerName = computed(() => {
-    const currentPlayerId = this.currentPlayer();
+    const currentPlayerId = this.boardService.getCurrentUser();
     if (!currentPlayerId) return 'Unknown';
 
-    const user = this.socketService.getUser(currentPlayerId);
+    const user = this.boardService.getUser(currentPlayerId);
     return user?.name || currentPlayerId;
   });
 
@@ -48,8 +52,7 @@ export class DiceComponent {
       console.log('Not your turn!');
       return;
     }
-
-    console.log('Rolling dice...');
-    this.socketService.rollDice();
+    console.log('Rolling dice');
+    this.diceService.rollDice();
   }
 }

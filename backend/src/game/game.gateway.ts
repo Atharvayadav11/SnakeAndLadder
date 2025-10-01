@@ -1,4 +1,4 @@
-import { WebSocketGateway, OnGatewayConnection, WebSocketServer, SubscribeMessage, MessageBody } from '@nestjs/websockets';
+import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { GameService } from './game.service';
 import { StartGameDto } from 'src/dto/startGame.dto';
@@ -25,12 +25,12 @@ export class GameGateway {
       const val = this.gameService.onRollDice(data.playerId, data.roomId);
 
       const state = this.gameService.getGameState(data.roomId);
+      this.server.to(data.roomId).emit('diceRolled', { playerId: data.playerId, val });
+
       if (state.isGameFinished && state.winner) {
         this.server.to(data.roomId).emit("gameWon", { playerId: data.playerId, roomId: data.roomId });
       }
-      else {
-        this.server.to(data.roomId).emit('diceRolled', { playerId: data.playerId, val });
-      }
+      
     } catch (error) {
       client.emit('rollDiceError', { message: error.message });
     }
