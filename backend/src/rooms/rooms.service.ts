@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";    
+import { Injectable } from "@nestjs/common";
 
 import { v4 as uuidv4 } from 'uuid';
 import { GameService } from "src/game/game.service";
@@ -7,11 +7,11 @@ import { GameStateModel } from "../models/gameState";
 
 @Injectable()
 export class RoomsService {
-  
 
-    constructor(private gameService:GameService){}
 
-getRoomById(id: string): GameStateModel {
+    constructor(private gameService: GameService) { }
+
+    getRoomById(id: string): GameStateModel {
         const gameState = this.gameService.getGameState(id);
         if (!gameState) {
             throw new Error('Room not found');
@@ -19,36 +19,40 @@ getRoomById(id: string): GameStateModel {
         return gameState;
     }
 
-createRoom(playerName: string, customId?: string, userId?: string) {
+    createRoom(playerName: string, customId?: string, userId?: string) {
+        console.log("Heyyy");
+        
         const roomId = (customId && customId.trim().length > 0) ? customId.trim() : uuidv4();
-if(this.gameService.getGameState(roomId)){
-    throw new Error('Room with this ID already exists');
-}
+        console.log(this.gameService.getGameState(roomId));
+        
+        if (this.gameService.getGameState(roomId) != undefined) {
+            throw new Error('Room with this ID already exists');
+        }
 
-   const newRoom: GameStateModel = {
-    Users: userId ? new Map<string, UserModel>([
-        [userId, {
-            id: userId,
-            name: playerName,
-            color: '',
-            currentPosition: 0,
-            isAnAdmin: true,
-            isActive: true
-        } as UserModel]
-    ]) : new Map<string, UserModel>(),
-    maxUsers: 4,
-    isGameStarted: false,
-    isGameFinished: false,
-    currentUserToPlay: '',
-    winner: '',
-    usersInQueue: [],
-    availableColors: ["red", "blue", "green", "yellow"]
-   }
-   this.gameService['gameState'].set(roomId,newRoom);
+        const newRoom: GameStateModel = {
+            Users: userId ? new Map<string, UserModel>([
+                [userId, {
+                    id: userId,
+                    name: playerName,
+                    color: '',
+                    currentPosition: 0,
+                    isAnAdmin: true,
+                    isActive: true
+                } as UserModel]
+            ]) : new Map<string, UserModel>(),
+            maxUsers: 4,
+            isGameStarted: false,
+            isGameFinished: false,
+            currentUserToPlay: '',
+            winner: '',
+            usersInQueue: [],
+            availableColors: ["red", "blue", "green", "yellow"]
+        }
+        this.gameService['gameState'].set(roomId, newRoom);
         return newRoom;
     }
 
-joinRoom(roomId: string, playerName: string,userId:string) {
+    joinRoom(roomId: string, playerName: string, userId: string) {
         const room = this.gameService.getGameState(roomId);
         if (!room) return null;
         if (room.Users.size >= room.maxUsers) {
@@ -61,13 +65,13 @@ joinRoom(roomId: string, playerName: string,userId:string) {
             isAnAdmin: false,
             isActive: true
         };
-       room.Users.set(userId,newUser);
-       room.usersInQueue.push(userId);
+        room.Users.set(userId, newUser);
+        room.usersInQueue.push(userId);
         return room;
     }
 
 
-selectColor(roomId: string, playerId: string, color: string) {
+    selectColor(roomId: string, playerId: string, color: string) {
 
         const room = this.gameService.getGameState(roomId);
         if (!room) {
@@ -87,7 +91,7 @@ selectColor(roomId: string, playerId: string, color: string) {
         return room;
     }
 
-handleUserDisconnect(roomId: string, playerId: string): GameStateModel | null {
+    handleUserDisconnect(roomId: string, playerId: string): GameStateModel | null {
         const room = this.gameService.getGameState(roomId);
         if (!room) return null;
         const user = room.Users.get(playerId);

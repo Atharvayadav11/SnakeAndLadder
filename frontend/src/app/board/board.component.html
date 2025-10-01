@@ -2,8 +2,8 @@
   <div class="game-header">
     
     <div class="room-info">
-      <span class="room-id">Room: {{ socketService.getCurrentRoomId() }}</span>
-      <span class="player-count">Players: {{ socketService.getPlayers().length }}/4</span>
+      <!-- <span class="room-id">Room: {{ boardService.getCurrentRoomId() }}</span> -->
+      <span class="player-count">Players: {{ boardService.getPlayersLength() }}/4</span>
     </div>
   </div>
 
@@ -31,7 +31,7 @@
         <h3>Game Status</h3>
         <div class="status-item">
           <span class="label">Dice Value:</span>
-          <span class="value">{{ socketService.diceValue() || '-' }}</span>
+          <span class="value">{{ diceService.diceValue() || '-' }}</span>
         </div>
         <div class="status-item">
           <span class="label">Current Turn:</span>

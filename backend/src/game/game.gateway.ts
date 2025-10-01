@@ -27,10 +27,10 @@ export class GameGateway {
       const state = this.gameService.getGameState(data.roomId);
       this.server.to(data.roomId).emit('diceRolled', { playerId: data.playerId, val });
 
-      if (state.isGameFinished && state.winner) {
+      if (state?.isGameFinished && state.winner) {
         this.server.to(data.roomId).emit("gameWon", { playerId: data.playerId, roomId: data.roomId });
       }
-      
+
     } catch (error) {
       client.emit('rollDiceError', { message: error.message });
     }
