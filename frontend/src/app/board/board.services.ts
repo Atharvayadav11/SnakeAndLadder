@@ -3,6 +3,7 @@ import { SocketService } from "../services/socket.services";
 import { Injectable, signal } from '@angular/core';
 import { GameStateModel } from '../models/gameState';
 import { UserModel } from '../user.model';
+import { HomeService } from '../home/home.services';
 
 @Injectable({ providedIn: 'root' })
 export class BoardService {
@@ -73,6 +74,7 @@ export class BoardService {
     
     this.moveCallbacks.forEach(cb => cb(playerId, val));
   }
+}
 
   isGameEnded(): boolean{
     if(this.gameState.winner && this.gameState.isGameFinished)
@@ -80,10 +82,22 @@ export class BoardService {
     return false;
   }
 
+  setGameState(state: GameStateModel){
+    this.gameState = state;
+  }
+
   private rotateQueue(queue: string[]): string[] {
       if (queue.length === 0) return queue;
       const [first, ...rest] = queue;
       return [...rest, first];
+  }
+
+  // getCurrentRoomId(){
+  //   return this.userService.roomId();
+  // }
+
+  getPlayersLength(){
+    return this.gameState.usersInQueue.length;
   }
 
 }

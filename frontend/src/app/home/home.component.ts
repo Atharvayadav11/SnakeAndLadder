@@ -209,7 +209,7 @@ export class HomeComponent implements OnInit {
 
   onStartGame() {
     const roomId = this.homeService.roomId();
-    const playerId = this.socketService.localUser();
+    const playerId = this.homeService.localUser();
     if (roomId) {
       this.homeService.startGame(roomId, playerId);
     }
@@ -237,9 +237,8 @@ onColorSelected(userId: string,color: string) {
 }
 
 onGameStarted(userId: string) {
-  this.homeService.onGameStarted(userId);
+  this.homeService.onGameStarted();
   this.router.navigate(['/game', this.homeService.roomId()]);
-
 }
 
 

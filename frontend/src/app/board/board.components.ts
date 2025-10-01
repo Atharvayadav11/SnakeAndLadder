@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
 import { DiceComponent } from "../dice/dice.component";
 import { BoardService } from './board.services';
 import { HomeService } from '../home/home.services';
+import { DiceService } from '../dice/dice.service';
 
 @Component({
   selector: 'app-board',
@@ -50,7 +51,7 @@ export class BoardComponent implements OnInit, AfterViewInit {
 
   private playerImages: { [color: string]: HTMLImageElement } = {};
 
-  constructor(private boardService: BoardService, private userService: HomeService) {
+  constructor(public boardService: BoardService, private userService: HomeService, public diceService: DiceService) {
     ['red','blue','yellow','green'].forEach(color => {
       const img = new Image();
       img.src = `/${color}.png`;
@@ -80,10 +81,12 @@ export class BoardComponent implements OnInit, AfterViewInit {
       }
     });
 
-    this.userService.onGameStarted().subscribe((data) => {
-      console.log('Game started!', data);
-      setTimeout(() => this.redrawBoard(), 100);
-    });
+    // this.userService.onGameStarted().subscribe((data) => {
+    //   console.log('Game started!', data);
+    //   setTimeout(() => this.redrawBoard(), 100);
+    // });
+
+    this.redrawBoard()
   }
 
   ngAfterViewInit() {
