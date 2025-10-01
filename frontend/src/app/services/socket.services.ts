@@ -4,6 +4,8 @@ import { io, Socket } from 'socket.io-client';
 import { UserModel } from '../user.model';
 import { UserService } from './users.service';
 import { GameState } from '../game.model';
+import { Observable } from 'rxjs';
+import { HomeService } from '../home/home.services';
 
 @Injectable({ providedIn: 'root' })
 export class SocketService {
@@ -19,7 +21,7 @@ export class SocketService {
       console.log('Disconnected from socket server');
     });
   }
-getSocket(): Socket {
+  getSocket(): Socket {
     return this.socket;
   }
 
@@ -28,9 +30,35 @@ getSocket(): Socket {
     this.socket.emit(event, data);
   }
 
+  on<T>(event: string): Observable<T> {
+    return new Observable(observer => {
+      this.socket.on(event, (data: T) => {
+        observer.next(data);
+      });
+    });
+  }
+
+
+  localUser = signal("");
+  roomId = signal("");
+
+  setLocalUser(userId: string){
+    this.localUser.set(userId);
+  }
+
+  setRoomId(roomId: string){
+    this.roomId.set(roomId);
+  }
+
+  // onRoomCreated(): Observable<any> {
+  //   return this.on('roomCreated');
+  // }
+
+  onRoomJoined(): Observable<any> {
+    return this.on('roomJoined');
+  }
+ 
 }
-
-
 
 // @Injectable({ providedIn: 'root' })
 // export class SocketService {
