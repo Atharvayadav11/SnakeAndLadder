@@ -18,7 +18,6 @@ export class BoardService {
       usersInQueue: [],
       availableColors: []
     }
-
     this.socketService.on<{playerId: string, roomId: string}>('gameWon').subscribe(({playerId, roomId}) => {
       this.gameState.isGameFinished = true;
       this.gameState.winner = playerId;
@@ -71,7 +70,6 @@ export class BoardService {
     if(val != 6){
       this.gameState.usersInQueue = this.rotateQueue(this.gameState.usersInQueue);
       this.gameState.currentUserToPlay = this.gameState.usersInQueue[0];
-    }
     
     this.moveCallbacks.forEach(cb => cb(playerId, val));
   }

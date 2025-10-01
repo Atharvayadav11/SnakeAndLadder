@@ -1,6 +1,11 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
+import { UserModel } from '../user.model';
+import { UserService } from './users.service';
+import { GameState } from '../game.model';
 import { Observable } from 'rxjs';
+import { HomeService } from '../home/home.services';
+
 
 @Injectable({ providedIn: 'root' })
 export class SocketService {
@@ -21,6 +26,7 @@ export class SocketService {
       return this.socket;
   }
 
+
   emit(event: string, data?: any) {
     console.log(`Emitting ${event}:`, data);
     this.socket.emit(event, data);
@@ -35,9 +41,18 @@ export class SocketService {
     });
   }
 
+
 }
 
 
+
+  // onRoomCreated(): Observable<any> {
+  //   return this.on('roomCreated');
+  // }
+
+  //onRoomJoined(): Observable<any> {
+   // return this.on('roomJoined');
+  //}
 
 // @Injectable({ providedIn: 'root' })
 // export class SocketService {
